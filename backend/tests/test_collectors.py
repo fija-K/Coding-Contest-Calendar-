@@ -200,6 +200,118 @@ class TestLeetCodeCollector:
             assert contest.duration_seconds == 5400
             assert contest.contest_url == "https://leetcode.com/contest/weekly-contest-450"
 
+    @pytest.mark.asyncio
+    async def test_known_test_cases_timestamps_and_ist(self):
+        """
+        Verify known test cases:
+        - Biweekly Contest 195: 1794061800 (Nov 7, 2026, 8:00 PM IST / 14:30 UTC)
+        - Weekly Contest 527: 1794105000 (Nov 8, 2026, 8:00 AM IST / 02:30 UTC)
+        """
+        import zoneinfo
+        ist = zoneinfo.ZoneInfo("Asia/Kolkata")
+        collector = LeetCodeCollector()
+        mock_data = {
+            "data": {
+                "topTwoContests": [
+                    {
+                        "title": "Weekly Contest 527",
+                        "titleSlug": "weekly-contest-527",
+                        "startTime": 1794105000,
+                        "duration": 5400,
+                        "originStartTime": 1794105000,
+                        "isVirtual": False
+                    },
+                    {
+                        "title": "Biweekly Contest 195",
+                        "titleSlug": "biweekly-contest-195",
+                        "startTime": 1794061800,
+                        "duration": 5400,
+                        "originStartTime": 1794061800,
+                        "isVirtual": False
+                    }
+                ],
+                "allContests": []
+            }
+        }
+
+        mock_resp = make_mock_response(200, mock_data)
+        with patch.object(httpx.AsyncClient, "post", return_value=mock_resp):
+            result = await collector.fetch_and_normalize()
+            assert result.success is True
+            assert len(result.contests) == 2
+
+            contests_by_id = {c.external_id: c for c in result.contests}
+            wc527 = contests_by_id["weekly-contest-527"]
+            bwc195 = contests_by_id["biweekly-contest-195"]
+
+            # Verify Weekly Contest 527
+            assert wc527.name == "Weekly Contest 527"
+            assert wc527.start_time.tzinfo == timezone.utc
+            assert wc527.start_time.year == 2026
+            assert wc527.start_time.month == 11
+            assert wc527.start_time.day == 8
+            assert wc527.start_time.hour == 2
+            assert wc527.start_time.minute == 30
+            # Check IST conversion
+            wc527_ist = wc527.start_time.astimezone(ist)
+            assert wc527_ist.strftime("%Y-%m-%d %I:%M %p") == "2026-11-08 08:00 AM"
+
+            # Verify Biweekly Contest 195
+            assert bwc195.name == "Biweekly Contest 195"
+            assert bwc195.start_time.tzinfo == timezone.utc
+            assert bwc195.start_time.year == 2026
+            assert bwc195.start_time.month == 11
+            assert bwc195.start_time.day == 7
+            assert bwc195.start_time.hour == 14
+            assert bwc195.start_time.minute == 30
+            # Check IST conversion
+            bwc195_ist = bwc195.start_time.astimezone(ist)
+            assert bwc195_ist.strftime("%Y-%m-%d %I:%M %p") == "2026-11-07 08:00 PM"
+
+    @pytest.mark.asyncio
+    async def test_graphql_error_with_truthy_null_data(self):
+        """
+        Regression: GraphQL returns errors with {"data": {"topTwoContests": None, "allContests": None}}
+        Must not be disguised as success with 0 contests.
+        """
+        collector = LeetCodeCollector()
+        mock_data = {
+            "errors": [{"message": "Rate limit reached for anonymous queries"}],
+            "data": {
+                "topTwoContests": None,
+                "allContests": None
+            }
+        }
+        mock_resp = make_mock_response(200, mock_data)
+        with patch.object(httpx.AsyncClient, "post", return_value=mock_resp):
+            result = await collector.fetch_and_normalize()
+            assert result.success is False
+            assert "Rate limit" in result.error_message
+
+    @pytest.mark.asyncio
+    async def test_slug_derivation_from_title(self):
+        """Verify slug is safely derived when titleSlug is missing."""
+        collector = LeetCodeCollector()
+        mock_data = {
+            "data": {
+                "topTwoContests": [
+                    {
+                        "title": "Weekly Contest 527",
+                        # titleSlug missing
+                        "startTime": 1794105000,
+                        "duration": 5400,
+                    }
+                ],
+                "allContests": []
+            }
+        }
+        mock_resp = make_mock_response(200, mock_data)
+        with patch.object(httpx.AsyncClient, "post", return_value=mock_resp):
+            result = await collector.fetch_and_normalize()
+            assert result.success is True
+            assert len(result.contests) == 1
+            assert result.contests[0].external_id == "weekly-contest-527"
+
 
 class TestGFGCollector:
     @pytest.mark.asyncio

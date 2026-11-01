@@ -3,17 +3,28 @@ from typing import List
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+def get_default_database_url() -> str:
+    env_db = os.environ.get("DATABASE_URL")
+    if env_db:
+        return env_db
+    # If running on Vercel or serverless, root filesystem is read-only, use /tmp
+    if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+        return "sqlite:////tmp/contests.db"
+    return "sqlite:///./contests.db"
+
+
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Coding Contest Calendar"
     API_V1_STR: str = "/api/v1"
     
-    DATABASE_URL: str = "sqlite:///./contests.db"
+    DATABASE_URL: str = get_default_database_url()
     
     CORS_ORIGINS: List[str] = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost:3000",
         "http://localhost:8000",
+        "https://*.vercel.app",
     ]
     
     ADMIN_API_KEY: str = "dev-admin-secret-key-change-in-prod"

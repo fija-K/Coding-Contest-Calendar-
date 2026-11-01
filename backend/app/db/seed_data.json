@@ -1,0 +1,192 @@
+{
+  "contests": [
+    {
+      "id": "codeforces_2282",
+      "platform": "codeforces",
+      "external_id": "2282",
+      "name": "Kotlin Heroes: Episode 15",
+      "start_time": "2026-12-08T14:35:00",
+      "duration_seconds": 9000,
+      "contest_url": "https://codeforces.com/contest/2282",
+      "status": "upcoming",
+      "source_updated_at": "2026-11-01T19:23:49.081809"
+    },
+    {
+      "id": "codeforces_2286",
+      "platform": "codeforces",
+      "external_id": "2286",
+      "name": "Kotlin Heroes: Practice 15",
+      "start_time": "2026-12-01T14:30:00",
+      "duration_seconds": 604800,
+      "contest_url": "https://codeforces.com/contest/2286",
+      "status": "upcoming",
+      "source_updated_at": "2026-11-01T19:23:49.081809"
+    },
+    {
+      "id": "codeforces_2285",
+      "platform": "codeforces",
+      "external_id": "2285",
+      "name": "Codeforces Round (Div. 2)",
+      "start_time": "2026-11-15T14:35:00",
+      "duration_seconds": 7200,
+      "contest_url": "https://codeforces.com/contest/2285",
+      "status": "upcoming",
+      "source_updated_at": "2026-11-01T19:23:49.081809"
+    },
+    {
+      "id": "codeforces_2279",
+      "platform": "codeforces",
+      "external_id": "2279",
+      "name": "Codeforces Round (Div. 1)",
+      "start_time": "2026-11-07T14:35:00",
+      "duration_seconds": 9000,
+      "contest_url": "https://codeforces.com/contest/2279",
+      "status": "upcoming",
+      "source_updated_at": "2026-11-01T19:23:49.081809"
+    },
+    {
+      "id": "codeforces_2280",
+      "platform": "codeforces",
+      "external_id": "2280",
+      "name": "Codeforces Round (Div. 2)",
+      "start_time": "2026-11-07T14:35:00",
+      "duration_seconds": 9000,
+      "contest_url": "https://codeforces.com/contest/2280",
+      "status": "upcoming",
+      "source_updated_at": "2026-11-01T19:23:49.081809"
+    },
+    {
+      "id": "codeforces_2284",
+      "platform": "codeforces",
+      "external_id": "2284",
+      "name": "Codeforces Round (Div. 2)",
+      "start_time": "2026-11-06T14:35:00",
+      "duration_seconds": 8100,
+      "contest_url": "https://codeforces.com/contest/2284",
+      "status": "upcoming",
+      "source_updated_at": "2026-11-01T19:23:49.081809"
+    },
+    {
+      "id": "codeforces_2283",
+      "platform": "codeforces",
+      "external_id": "2283",
+      "name": "Educational Codeforces Round 196 (Rated for Div. 2)",
+      "start_time": "2026-11-04T14:35:00",
+      "duration_seconds": 7200,
+      "contest_url": "https://codeforces.com/contest/2283",
+      "status": "upcoming",
+      "source_updated_at": "2026-11-01T19:23:49.081809"
+    },
+    {
+      "id": "codechef_DSAMONDAY027",
+      "platform": "codechef",
+      "external_id": "DSAMONDAY027",
+      "name": "Monday Munch - DSA Challenge 027 (Rated)",
+      "start_time": "2026-11-02T13:30:00",
+      "duration_seconds": 10800,
+      "contest_url": "https://www.codechef.com/DSAMONDAY027",
+      "status": "upcoming",
+      "source_updated_at": "2026-11-01T19:23:50.154904"
+    },
+    {
+      "id": "codechef_START263",
+      "platform": "codechef",
+      "external_id": "START263",
+      "name": "Starters 263",
+      "start_time": "2026-11-04T14:30:00",
+      "duration_seconds": 7200,
+      "contest_url": "https://www.codechef.com/START263",
+      "status": "upcoming",
+      "source_updated_at": "2026-11-01T19:23:50.154904"
+    },
+    {
+      "id": "codechef_START264",
+      "platform": "codechef",
+      "external_id": "START264",
+      "name": "Starters 264",
+      "start_time": "2026-11-11T14:30:00",
+      "duration_seconds": 7200,
+      "contest_url": "https://www.codechef.com/START264",
+      "status": "upcoming",
+      "source_updated_at": "2026-11-01T19:23:50.154904"
+    },
+    {
+      "id": "codechef_START265",
+      "platform": "codechef",
+      "external_id": "START265",
+      "name": "Starters 265",
+      "start_time": "2026-11-18T14:30:00",
+      "duration_seconds": 7200,
+      "contest_url": "https://www.codechef.com/START265",
+      "status": "upcoming",
+      "source_updated_at": "2026-11-01T19:23:50.154904"
+    },
+    {
+      "id": "leetcode_weekly-contest-527",
+      "platform": "leetcode",
+      "external_id": "weekly-contest-527",
+      "name": "Weekly Contest 527",
+      "start_time": "2026-11-08T02:30:00",
+      "duration_seconds": 5400,
+      "contest_url": "https://leetcode.com/contest/weekly-contest-527",
+      "status": "upcoming",
+      "source_updated_at": "2026-11-01T19:33:02.888575"
+    },
+    {
+      "id": "leetcode_biweekly-contest-195",
+      "platform": "leetcode",
+      "external_id": "biweekly-contest-195",
+      "name": "Biweekly Contest 195",
+      "start_time": "2026-11-07T14:30:00",
+      "duration_seconds": 5400,
+      "contest_url": "https://leetcode.com/contest/biweekly-contest-195",
+      "status": "upcoming",
+      "source_updated_at": "2026-11-01T19:33:02.888575"
+    },
+    {
+      "id": "leetcode_weekly-contest-526",
+      "platform": "leetcode",
+      "external_id": "weekly-contest-526",
+      "name": "Weekly Contest 526",
+      "start_time": "2026-11-01T02:30:00",
+      "duration_seconds": 5400,
+      "contest_url": "https://leetcode.com/contest/weekly-contest-526",
+      "status": "completed",
+      "source_updated_at": "2026-11-01T19:33:02.888575"
+    }
+  ],
+  "platforms": [
+    {
+      "platform": "codeforces",
+      "health": "healthy",
+      "contest_count": 7,
+      "last_successful_refresh": "2026-11-01T19:23:49.083562",
+      "last_attempted_refresh": "2026-11-01T19:23:49.083562",
+      "latest_error": null
+    },
+    {
+      "platform": "codechef",
+      "health": "healthy",
+      "contest_count": 4,
+      "last_successful_refresh": "2026-11-01T19:23:50.156585",
+      "last_attempted_refresh": "2026-11-01T19:23:50.156585",
+      "latest_error": null
+    },
+    {
+      "platform": "leetcode",
+      "health": "healthy",
+      "contest_count": 3,
+      "last_successful_refresh": "2026-11-01T19:33:02.893201",
+      "last_attempted_refresh": "2026-11-01T19:33:02.893201",
+      "latest_error": null
+    },
+    {
+      "platform": "gfg",
+      "health": "healthy",
+      "contest_count": 0,
+      "last_successful_refresh": "2026-11-01T19:23:52.826406",
+      "last_attempted_refresh": "2026-11-01T19:23:52.826406",
+      "latest_error": null
+    }
+  ]
+}

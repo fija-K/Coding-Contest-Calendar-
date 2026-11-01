@@ -7,6 +7,7 @@ from fastapi.responses import RedirectResponse
 
 from app.core.config import settings
 from app.db.session import engine, Base
+from app.db.init_db import seed_database_if_empty
 from app.api.endpoints import router as api_router
 from app.services.scheduler import start_scheduler, shutdown_scheduler
 from app.services.sync_service import sync_service
@@ -21,9 +22,9 @@ logger = logging.getLogger("contest_calendar")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: ensure tables exist
-    logger.info("Initializing database tables...")
-    Base.metadata.create_all(bind=engine)
+    # Startup: ensure tables exist and seed initial snapshot if empty
+    logger.info("Initializing database tables and verifying seed data...")
+    seed_database_if_empty()
 
     # Start background scheduler
     logger.info("Starting background scheduler...")

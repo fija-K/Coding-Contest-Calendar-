@@ -47,31 +47,35 @@ class SyncService:
 
         async with self._lock:
             self._is_syncing = True
-            logger.info("Starting contest synchronization...")
+            logger.info("Starting concurrent contest synchronization...")
             results = {}
 
-            try:
-                for collector in self.collectors:
-                    if target_platform and collector.platform_id != target_platform.lower():
-                        continue
+            async def _run_collector(collector: BaseCollector):
+                try:
+                    res = await collector.fetch_and_normalize()
+                    await self._persist_collector_result(res)
+                    return collector.platform_id, {
+                        "success": res.success,
+                        "count": len(res.contests),
+                        "error": res.error_message
+                    }
+                except Exception as e:
+                    logger.error(f"Fatal error running collector {collector.platform_id}: {e}", exc_info=True)
+                    self._record_platform_failure(collector.platform_id, str(e))
+                    return collector.platform_id, {
+                        "success": False,
+                        "count": 0,
+                        "error": str(e)
+                    }
 
-                    # Platform failure isolation: one failure does not halt others
-                    try:
-                        res = await collector.fetch_and_normalize()
-                        await self._persist_collector_result(res)
-                        results[collector.platform_id] = {
-                            "success": res.success,
-                            "count": len(res.contests),
-                            "error": res.error_message
-                        }
-                    except Exception as e:
-                        logger.error(f"Fatal error running collector {collector.platform_id}: {e}", exc_info=True)
-                        self._record_platform_failure(collector.platform_id, str(e))
-                        results[collector.platform_id] = {
-                            "success": False,
-                            "count": 0,
-                            "error": str(e)
-                        }
+            try:
+                active = [
+                    c for c in self.collectors
+                    if not target_platform or c.platform_id == target_platform.lower()
+                ]
+                gathered = await asyncio.gather(*[_run_collector(c) for c in active])
+                for pid, res in gathered:
+                    results[pid] = res
 
                 # Update statuses for all existing contests in DB based on current time
                 self.update_contest_statuses()

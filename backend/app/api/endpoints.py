@@ -17,6 +17,7 @@ from app.schemas.contest import (
 from app.services.sync_service import sync_service
 from app.services.scheduler import scheduler
 from app.core.config import settings
+from app.db.init_db import seed_database_if_empty
 
 logger = logging.getLogger(__name__)
 
@@ -85,6 +86,10 @@ def get_contests(
             status_code=http_status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid sort '{sort}'. Valid sort options: {', '.join(VALID_SORTS)}"
         )
+
+    # Auto-seed if database is completely empty (e.g. serverless cold boot)
+    if db.query(Contest).count() == 0:
+        seed_database_if_empty()
 
     # First update status in-place for active contests
     sync_service.update_contest_statuses()
@@ -164,6 +169,9 @@ def get_contest_by_id(contest_id: str, db: Session = Depends(get_db)):
 @router.get("/sources/status", response_model=List[PlatformStatusResponse], tags=["Platforms"])
 def get_sources_status(db: Session = Depends(get_db)):
     """Return source-specific collection status and data freshness."""
+    if db.query(Contest).count() == 0:
+        seed_database_if_empty()
+
     statuses: List[PlatformStatusResponse] = []
     now_utc = datetime.now(timezone.utc)
 

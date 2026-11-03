@@ -121,18 +121,6 @@ def sample_contests(db_session):
             created_at=now,
             updated_at=now,
         ),
-        Contest(
-            id="gfg_weekly-coding-100",
-            platform="gfg",
-            external_id="weekly-coding-100",
-            name="GeeksforGeeks Weekly 100",
-            start_time=now + timedelta(days=4),
-            duration_seconds=5400,
-            contest_url="https://practice.geeksforgeeks.org/contest/weekly-coding-100",
-            status="upcoming",
-            created_at=now,
-            updated_at=now,
-        ),
     ]
 
     for c in contests:
@@ -142,7 +130,6 @@ def sample_contests(db_session):
         PlatformHealth(platform="codeforces", health="healthy", contest_count=2, last_successful_refresh=now),
         PlatformHealth(platform="codechef", health="healthy", contest_count=1, last_successful_refresh=now),
         PlatformHealth(platform="leetcode", health="healthy", contest_count=2, last_successful_refresh=now),
-        PlatformHealth(platform="gfg", health="healthy", contest_count=1, last_successful_refresh=now),
     ]
     for h in health_records:
         db_session.add(h)

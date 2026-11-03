@@ -69,7 +69,7 @@ describe('Completion Logic & useCompletedContests Hook', () => {
     const { result: reloadedResult } = renderHook(() => useCompletedContests());
     expect(reloadedResult.current.isCompleted('cf_1001')).toBe(true);
     expect(reloadedResult.current.isCompleted('lc_2002')).toBe(true);
-    expect(reloadedResult.current.isCompleted('gfg_999')).toBe(false);
+    expect(reloadedResult.current.isCompleted('cf_999')).toBe(false);
   });
 
   it('gracefully handles missing, corrupted, or non-array localStorage data', () => {

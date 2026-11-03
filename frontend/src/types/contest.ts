@@ -1,4 +1,4 @@
-export type PlatformId = 'codeforces' | 'codechef' | 'leetcode' | 'gfg';
+export type PlatformId = 'codeforces' | 'codechef' | 'leetcode';
 
 export type ContestStatus = 'upcoming' | 'ongoing' | 'completed';
 

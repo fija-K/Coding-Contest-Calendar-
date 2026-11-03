@@ -27,7 +27,6 @@ SUPPORTED_PLATFORMS = {
     "codeforces": "Codeforces",
     "codechef": "CodeChef",
     "leetcode": "LeetCode",
-    "gfg": "GeeksforGeeks",
 }
 VALID_STATUSES = {"upcoming", "ongoing", "completed", "all"}
 VALID_SORTS = {"start_time_asc", "start_time_desc", "name_asc", "name_desc"}

@@ -7,7 +7,6 @@ from app.collectors.base import BaseCollector
 from app.collectors.codeforces import CodeforcesCollector
 from app.collectors.codechef import CodeChefCollector
 from app.collectors.leetcode import LeetCodeCollector
-from app.collectors.gfg import GFGCollector
 
 
 def make_mock_response(status_code: int = 200, json_data: dict = None):
@@ -311,92 +310,4 @@ class TestLeetCodeCollector:
             assert result.success is True
             assert len(result.contests) == 1
             assert result.contests[0].external_id == "weekly-contest-527"
-
-
-class TestGFGCollector:
-    @pytest.mark.asyncio
-    async def test_fetch_and_normalize_valid(self):
-        collector = GFGCollector()
-        mock_data = {
-            "results": {
-                "upcoming": [
-                    {
-                        "name": "Geeks Coding Challenge 150",
-                        "slug": "geeks-coding-challenge-150",
-                        "start_time": "2026-11-15T19:00:00",
-                        "end_time": "2026-11-15T21:30:00",
-                        "type": 3,
-                    },
-                    {
-                        "name": "AI Webinar with Experts",
-                        "slug": "ai-webinar",
-                        "start_time": "2026-11-16T18:00:00",
-                        "end_time": "2026-11-16T19:30:00",
-                        "type": 1,  # Non-contest webinar should be excluded!
-                    }
-                ],
-                "past": []
-            }
-        }
-
-        mock_resp = make_mock_response(200, mock_data)
-        with patch.object(httpx.AsyncClient, "get", return_value=mock_resp):
-            result = await collector.fetch_and_normalize()
-
-            assert result.success is True
-            # The webinar (type 1) must be excluded, leaving only 1 contest
-            assert len(result.contests) == 1
-            contest = result.contests[0]
-            assert contest.platform == "gfg"
-            assert contest.external_id == "geeks-coding-challenge-150"
-            assert contest.name == "Geeks Coding Challenge 150"
-            # 19:00 to 21:30 is 2.5 hours = 9000 seconds
-            assert contest.duration_seconds == 9000
-            assert contest.contest_url == "https://practice.geeksforgeeks.org/contest/geeks-coding-challenge-150"
-            # IST (19:00 +05:30) converted to UTC is 13:30Z
-            assert contest.start_time.hour == 13
-            assert contest.start_time.minute == 30
-            assert contest.start_time.tzinfo == timezone.utc
-
-    @pytest.mark.asyncio
-    async def test_missing_optional_fields(self):
-        collector = GFGCollector()
-        mock_data = {
-            "results": {
-                "upcoming": [
-                    {
-                        "name": "GFG Speed Run",
-                        "slug": "gfg-speed-run",
-                        "start_time": "2026-11-20T20:00:00",
-                        # end_time missing
-                        "type": 3,
-                    }
-                ]
-            }
-        }
-
-        mock_resp = make_mock_response(200, mock_data)
-        with patch.object(httpx.AsyncClient, "get", return_value=mock_resp):
-            result = await collector.fetch_and_normalize()
-            assert result.success is True
-            assert len(result.contests) == 1
-            # Missing end_time defaults to 7200 seconds
-            assert result.contests[0].duration_seconds == 7200
-
-    @pytest.mark.asyncio
-    async def test_handle_malformed_response(self):
-        collector = GFGCollector()
-        mock_resp = make_mock_response(200, {"error": "Invalid API Key"})
-        with patch.object(httpx.AsyncClient, "get", return_value=mock_resp):
-            result = await collector.fetch_and_normalize()
-            assert result.success is False
-            assert "unexpected response structure" in result.error_message
-
-    @pytest.mark.asyncio
-    async def test_handle_timeout(self):
-        collector = GFGCollector()
-        with patch.object(httpx.AsyncClient, "get", side_effect=httpx.TimeoutException("Connection timed out")):
-            result = await collector.fetch_and_normalize()
-            assert result.success is False
-            assert "timed out" in result.error_message
 

@@ -32,13 +32,17 @@ def test_get_contests_filter_platform(client, sample_contests):
     for item in data["items"]:
         assert item["platform"] == "leetcode"
 
-    # Test GeeksforGeeks filter
-    response_gfg = client.get("/api/v1/contests?platform=gfg")
-    assert response_gfg.status_code == 200
-    data_gfg = response_gfg.json()
-    assert data_gfg["total"] == 1
-    assert data_gfg["items"][0]["platform"] == "gfg"
-    assert data_gfg["items"][0]["name"] == "GeeksforGeeks Weekly 100"
+    # Test Codeforces filter
+    response_cf = client.get("/api/v1/contests?platform=codeforces")
+    assert response_cf.status_code == 200
+    data_cf = response_cf.json()
+    assert data_cf["total"] == 2
+    for item in data_cf["items"]:
+        assert item["platform"] == "codeforces"
+
+    # Invalid platform returns 400
+    response_invalid = client.get("/api/v1/contests?platform=gfg")
+    assert response_invalid.status_code == 400
 
 
 def test_get_contests_filter_status(client, sample_contests):
@@ -113,8 +117,7 @@ def test_get_platforms_status(client, sample_contests):
     assert "codeforces" in platforms
     assert "codechef" in platforms
     assert "leetcode" in platforms
-    assert "gfg" in platforms
-    assert platforms["gfg"]["name"] == "GeeksforGeeks"
+    assert "gfg" not in platforms
     assert platforms["codeforces"]["health"] == "healthy"
 
 

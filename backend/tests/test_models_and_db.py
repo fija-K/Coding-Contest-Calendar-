@@ -117,28 +117,28 @@ async def test_sync_upsert_and_cache_preservation(monkeypatch, db_session):
 
 
 @pytest.mark.asyncio
-async def test_gfg_failure_isolation(monkeypatch, db_session):
+async def test_platform_failure_isolation(monkeypatch, db_session):
     now = datetime.now(timezone.utc)
     sync = SyncService(collectors=[])
     monkeypatch.setattr("app.services.sync_service.SessionLocal", lambda: db_session)
 
-    # Pre-existing GFG contest in DB
-    gfg_item = ContestCreate(
-        id="gfg_contest_1",
-        platform="gfg",
+    # Pre-existing CodeChef contest in DB
+    cc_item = ContestCreate(
+        id="codechef_contest_1",
+        platform="codechef",
         external_id="contest_1",
-        name="GFG Cached Contest",
+        name="CodeChef Cached Contest",
         start_time=now + timedelta(days=2),
         duration_seconds=7200,
-        contest_url="https://practice.geeksforgeeks.org/contest/contest_1",
+        contest_url="https://www.codechef.com/contest_1",
         status="upcoming",
     )
-    res_gfg_initial = CollectorResult(platform="gfg", success=True, contests=[gfg_item], raw_count=1)
-    await sync._persist_collector_result(res_gfg_initial)
+    res_cc_initial = CollectorResult(platform="codechef", success=True, contests=[cc_item], raw_count=1)
+    await sync._persist_collector_result(res_cc_initial)
 
-    # GFG refresh fails with 500 error
-    res_gfg_fail = CollectorResult(platform="gfg", success=False, contests=[], error_message="500 Internal Server Error")
-    await sync._persist_collector_result(res_gfg_fail)
+    # CodeChef refresh fails with 500 error
+    res_cc_fail = CollectorResult(platform="codechef", success=False, contests=[], error_message="500 Internal Server Error")
+    await sync._persist_collector_result(res_cc_fail)
 
     # Codeforces refresh succeeds in the same cycle
     cf_item = ContestCreate(
@@ -154,19 +154,19 @@ async def test_gfg_failure_isolation(monkeypatch, db_session):
     res_cf_success = CollectorResult(platform="codeforces", success=True, contests=[cf_item], raw_count=1)
     await sync._persist_collector_result(res_cf_success)
 
-    # Verify GFG cached contest was preserved
-    retained_gfg = db_session.query(Contest).filter(Contest.id == "gfg_contest_1").first()
-    assert retained_gfg is not None
-    assert retained_gfg.name == "GFG Cached Contest"
+    # Verify CodeChef cached contest was preserved
+    retained_cc = db_session.query(Contest).filter(Contest.id == "codechef_contest_1").first()
+    assert retained_cc is not None
+    assert retained_cc.name == "CodeChef Cached Contest"
 
     # Verify CF contest was saved
     saved_cf = db_session.query(Contest).filter(Contest.id == "codeforces_cf_2").first()
     assert saved_cf is not None
 
     # Verify health states
-    gfg_health = db_session.query(PlatformHealth).filter(PlatformHealth.platform == "gfg").first()
-    assert gfg_health.health == "degraded"
-    assert "500 Internal Server Error" in gfg_health.latest_error
+    cc_health = db_session.query(PlatformHealth).filter(PlatformHealth.platform == "codechef").first()
+    assert cc_health.health == "degraded"
+    assert "500 Internal Server Error" in cc_health.latest_error
 
     cf_health = db_session.query(PlatformHealth).filter(PlatformHealth.platform == "codeforces").first()
     assert cf_health.health == "healthy"

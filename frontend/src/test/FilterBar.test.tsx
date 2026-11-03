@@ -19,7 +19,7 @@ describe('FilterBar Component', () => {
         onSearchChange={onSearchChange}
         activeView="list"
         onViewChange={onViewChange}
-        counts={{ all: 12, leetcode: 4, codechef: 3, codeforces: 3, gfg: 2 }}
+        counts={{ all: 10, leetcode: 4, codechef: 3, codeforces: 3 }}
         completedCount={4}
       />
     );
@@ -28,9 +28,9 @@ describe('FilterBar Component', () => {
     fireEvent.click(leetcodeBtn);
     expect(onSelectPlatform).toHaveBeenCalledWith('leetcode');
 
-    const gfgBtn = screen.getByRole('button', { name: /GeeksforGeeks/i });
-    fireEvent.click(gfgBtn);
-    expect(onSelectPlatform).toHaveBeenCalledWith('gfg');
+    const codeforcesBtn = screen.getByRole('button', { name: /Codeforces/i });
+    fireEvent.click(codeforcesBtn);
+    expect(onSelectPlatform).toHaveBeenCalledWith('codeforces');
 
     const completedBtn = screen.getByRole('button', { name: /Completed/i });
     fireEvent.click(completedBtn);

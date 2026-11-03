@@ -179,14 +179,6 @@
       "last_successful_refresh": "2026-11-01T19:33:02.893201",
       "last_attempted_refresh": "2026-11-01T19:33:02.893201",
       "latest_error": null
-    },
-    {
-      "platform": "gfg",
-      "health": "healthy",
-      "contest_count": 0,
-      "last_successful_refresh": "2026-11-01T19:23:52.826406",
-      "last_attempted_refresh": "2026-11-01T19:23:52.826406",
-      "latest_error": null
     }
   ]
 }

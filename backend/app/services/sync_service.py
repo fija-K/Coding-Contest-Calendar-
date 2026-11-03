@@ -10,7 +10,6 @@ from app.collectors.base import BaseCollector, CollectorResult
 from app.collectors.codeforces import CodeforcesCollector
 from app.collectors.codechef import CodeChefCollector
 from app.collectors.leetcode import LeetCodeCollector
-from app.collectors.gfg import GFGCollector
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +23,6 @@ class SyncService:
             CodeforcesCollector(),
             CodeChefCollector(),
             LeetCodeCollector(),
-            GFGCollector(),
         ]
 
     @property

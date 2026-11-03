@@ -16,7 +16,6 @@ interface FilterBarProps {
     leetcode: number;
     codechef: number;
     codeforces: number;
-    gfg: number;
   };
   completedCount?: number;
 }
@@ -69,14 +68,6 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           >
             <span>Codeforces</span>
             <span className="tab-count mono">({counts.codeforces})</span>
-          </button>
-          <button
-            type="button"
-            className={`platform-tab-btn ${selectedPlatform === 'gfg' ? 'active' : ''}`}
-            onClick={() => onSelectPlatform('gfg')}
-          >
-            <span>GeeksforGeeks</span>
-            <span className="tab-count mono">({counts.gfg})</span>
           </button>
         </div>
       </div>

@@ -102,7 +102,6 @@ export const App: React.FC = () => {
     let leetcode = 0;
     let codechef = 0;
     let codeforces = 0;
-    let gfg = 0;
 
     contests.forEach((c) => {
       let statusMatches = false;
@@ -121,11 +120,10 @@ export const App: React.FC = () => {
         if (c.platform === 'leetcode') leetcode++;
         if (c.platform === 'codechef') codechef++;
         if (c.platform === 'codeforces') codeforces++;
-        if (c.platform === 'gfg') gfg++;
       }
     });
 
-    return { all, leetcode, codechef, codeforces, gfg };
+    return { all, leetcode, codechef, codeforces };
   }, [contests, selectedStatus, isCompleted]);
 
   // Filtered contests based on platform, status, and search query
@@ -186,7 +184,7 @@ export const App: React.FC = () => {
           <div className="intro-main">
             <h1 className="page-title">Contest Schedule</h1>
             <p className="page-subtitle">
-              Unified competitive programming calendar tracking <span className="highlight mono">{contests.length}</span> contests across LeetCode, CodeChef, Codeforces, and GeeksforGeeks.
+              Unified competitive programming calendar tracking <span className="highlight mono">{contests.length}</span> contests across LeetCode, CodeChef, and Codeforces.
             </p>
           </div>
           {/* Compact Synchronization Status Line */}

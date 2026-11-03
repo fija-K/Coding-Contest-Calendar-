@@ -31,29 +31,29 @@ describe('ContestCard Component', () => {
     expect(link).toHaveAttribute('rel', 'noopener noreferrer');
   });
 
-  it('renders GeeksforGeeks contest details correctly', () => {
-    const mockGfgContest: Contest = {
-      id: 'gfg_weekly_100',
-      platform: 'gfg',
-      external_id: 'weekly-100',
-      name: 'GFG Weekly Coding Contest - 100',
-      start_time: '2026-11-15T13:30:00Z',
-      end_time: '2026-11-15T15:00:00Z',
-      duration_seconds: 5400,
-      contest_url: 'https://practice.geeksforgeeks.org/contest/weekly-100',
+  it('renders CodeChef contest details correctly', () => {
+    const mockCodeChefContest: Contest = {
+      id: 'codechef_starters_250',
+      platform: 'codechef',
+      external_id: 'starters_250',
+      name: 'Starters 250 (Rated)',
+      start_time: '2026-11-15T14:30:00Z',
+      end_time: '2026-11-15T16:30:00Z',
+      duration_seconds: 7200,
+      contest_url: 'https://www.codechef.com/START250',
       status: 'upcoming',
       created_at: '2026-11-01T00:00:00Z',
       updated_at: '2026-11-01T00:00:00Z',
     };
 
-    render(<ContestCard contest={mockGfgContest} timezone="Asia/Kolkata" />);
+    render(<ContestCard contest={mockCodeChefContest} timezone="Asia/Kolkata" />);
 
-    expect(screen.getByText('GFG Weekly Coding Contest - 100')).toBeInTheDocument();
-    expect(screen.getByText('gfg')).toBeInTheDocument();
-    expect(screen.getByText(/1h 30m/)).toBeInTheDocument();
+    expect(screen.getByText('Starters 250 (Rated)')).toBeInTheDocument();
+    expect(screen.getByText('codechef')).toBeInTheDocument();
+    expect(screen.getByText(/2h/)).toBeInTheDocument();
 
-    const link = screen.getByRole('link', { name: /Open GFG Weekly Coding Contest - 100/i });
-    expect(link).toHaveAttribute('href', 'https://practice.geeksforgeeks.org/contest/weekly-100');
+    const link = screen.getByRole('link', { name: /Open Starters 250/i });
+    expect(link).toHaveAttribute('href', 'https://www.codechef.com/START250');
   });
 
   it('renders uncompleted state with "Mark completed" and handles clicks', () => {

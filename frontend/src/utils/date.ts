@@ -90,6 +90,34 @@ export interface CountdownState {
   isCompleted: boolean;
 }
 
+export type LiveStatus = 'live' | 'upcoming' | 'expired';
+
+export function getContestLiveStatus(
+  startTimeIso: string,
+  endTimeIso?: string | null,
+  now: Date = new Date(),
+  durationSeconds?: number
+): LiveStatus {
+  const current = now.getTime();
+  const start = new Date(startTimeIso).getTime();
+  let end: number;
+  if (endTimeIso) {
+    end = new Date(endTimeIso).getTime();
+  } else if (durationSeconds !== undefined) {
+    end = start + durationSeconds * 1000;
+  } else {
+    end = start;
+  }
+
+  if (current < start) {
+    return 'upcoming';
+  } else if (current >= start && current <= end) {
+    return 'live';
+  } else {
+    return 'expired';
+  }
+}
+
 export function calculateCountdown(
   startTimeIso: string,
   endTimeIso: string,

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatDateTime, formatDuration, calculateCountdown } from '../utils/date';
+import { formatDateTime, formatDuration, calculateCountdown, getContestLiveStatus } from '../utils/date';
 
 describe('Date and Countdown Utilities', () => {
   it('formats datetime correctly in Asia/Kolkata timezone', () => {
@@ -61,5 +61,22 @@ describe('Date and Countdown Utilities', () => {
     const countdown = calculateCountdown(startIso, endIso, fakeNow);
     expect(countdown.isCompleted).toBe(true);
     expect(countdown.formatted).toBe('Contest completed');
+  });
+
+  it('correctly classifies contest as upcoming, live, or expired', () => {
+    const startIso = '2026-11-04T14:30:00Z';
+    const endIso = '2026-11-04T16:30:00Z';
+
+    // Before start -> upcoming
+    const beforeStart = new Date('2026-11-04T14:00:00Z');
+    expect(getContestLiveStatus(startIso, endIso, beforeStart)).toBe('upcoming');
+
+    // During contest -> live
+    const duringContest = new Date('2026-11-04T15:00:00Z');
+    expect(getContestLiveStatus(startIso, endIso, duringContest)).toBe('live');
+
+    // After end -> expired
+    const afterEnd = new Date('2026-11-04T17:00:00Z');
+    expect(getContestLiveStatus(startIso, endIso, afterEnd)).toBe('expired');
   });
 });

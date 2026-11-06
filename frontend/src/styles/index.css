@@ -1631,3 +1631,149 @@ a:focus-visible {
   font-size: 0.6875rem;
   color: var(--muted-foreground);
 }
+
+
+/* ==========================================================================
+   12. CELEBRATION CLAPPING EMOJI SHOWER & SOUND
+   ========================================================================== */
+.celebration-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 99999;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.celebration-emoji-particle {
+  position: absolute;
+  top: -60px;
+  will-change: transform, opacity;
+  animation-name: celebration-fall;
+  animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  animation-fill-mode: forwards;
+  pointer-events: none;
+  line-height: 1;
+}
+
+@keyframes celebration-fall {
+  0% {
+    transform: translate3d(var(--drift-start, 0), -60px, 0) rotate(var(--rot-start, 0deg));
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: translate3d(var(--drift-end, 0), calc(100vh + 80px), 0) rotate(var(--rot-end, 0deg));
+    opacity: 0;
+  }
+}
+
+/* Center Celebration Badge */
+.celebration-center-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(18, 18, 24, 0.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75), 0 0 32px rgba(168, 85, 247, 0.22);
+  border-radius: var(--radius-sm);
+  padding: 0.85rem 1.35rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  pointer-events: none;
+  animation: celebration-badge-pop 3.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  max-width: 90vw;
+}
+
+@keyframes celebration-badge-pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  12% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  75% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.92);
+  }
+}
+
+.celebration-center-icon {
+  font-size: 1.75rem;
+  line-height: 1;
+  filter: drop-shadow(0 2px 8px rgba(245, 158, 11, 0.4));
+  animation: celebration-hand-clap 0.7s ease-in-out infinite alternate;
+}
+
+@keyframes celebration-hand-clap {
+  0% { transform: scale(1) rotate(-6deg); }
+  100% { transform: scale(1.15) rotate(6deg); }
+}
+
+.celebration-center-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.celebration-center-title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #f3e8ff;
+  letter-spacing: -0.01em;
+}
+
+.celebration-center-subtitle {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Prefers-reduced-motion Toast */
+.celebration-reduced-motion-toast {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  padding: 0.6rem 1rem;
+  color: var(--foreground);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  z-index: 99999;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+/* Sound toggle button in header */
+.header-icon-btn.sound-toggle-btn.muted {
+  color: var(--text-dim);
+  opacity: 0.65;
+}
+
+.header-icon-btn.sound-toggle-btn:hover {
+  opacity: 1;
+}

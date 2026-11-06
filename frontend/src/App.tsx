@@ -20,6 +20,13 @@ import {
   isExpiredOlderThan7Days,
   getAutoRemoveRemainingDays,
 } from './utils/date';
+import { isCelebrationSoundMuted, setCelebrationSoundMuted } from './utils/sound';
+import {
+  triggerClapShower,
+  hasCelebratedContest,
+  markContestCelebrated,
+  clearCelebratedContests,
+} from './utils/celebration';
 
 export const App: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
@@ -38,6 +45,45 @@ export const App: React.FC = () => {
   const [selectedStatus, setSelectedStatus] = useState<StatusFilter>('upcoming');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeView, setActiveView] = useState<'list' | 'calendar'>('list');
+
+  // Celebration sound mute preference state
+  const [isSoundMuted, setIsSoundMuted] = useState<boolean>(() => isCelebrationSoundMuted());
+
+  const handleToggleSound = useCallback(() => {
+    setIsSoundMuted((prev) => {
+      const next = !prev;
+      setCelebrationSoundMuted(next);
+      return next;
+    });
+  }, []);
+
+  // Completion toggle handler with single-celebration guarantee
+  const handleToggleComplete = useCallback(
+    (contestId: string) => {
+      const alreadyCompleted = isCompleted(contestId);
+      toggleComplete(contestId);
+
+      // Celebrate only when transitioning from uncompleted to completed
+      // and only if this contest hasn't celebrated already
+      if (!alreadyCompleted) {
+        if (!hasCelebratedContest(contestId)) {
+          markContestCelebrated(contestId);
+          const contest = contests.find((c) => c.id === contestId);
+          triggerClapShower({
+            contestId,
+            contestName: contest?.name,
+            message: 'Contest completed! 👏',
+          });
+        }
+      }
+    },
+    [isCompleted, toggleComplete, contests]
+  );
+
+  const handleResetCompletions = useCallback(() => {
+    clearAllCompleted();
+    clearCelebratedContests();
+  }, [clearAllCompleted]);
 
   // Real-time ticking clock for dynamic live/upcoming/expired transitions
   const [currentTime, setCurrentTime] = useState<Date>(() => new Date());
@@ -312,6 +358,8 @@ export const App: React.FC = () => {
         onTimezoneChange={setTimezone}
         timezones={commonTimezones}
         totalVisits={analytics?.total_visits}
+        isSoundMuted={isSoundMuted}
+        onToggleSound={handleToggleSound}
       />
 
       <main className="container main-content-wrap">
@@ -376,7 +424,7 @@ export const App: React.FC = () => {
             <button
               type="button"
               className="progress-reset-btn"
-              onClick={clearAllCompleted}
+              onClick={handleResetCompletions}
               title="Reset all completed marks"
               data-testid="completion-clear-btn"
             >
@@ -412,7 +460,7 @@ export const App: React.FC = () => {
             contests={filteredContests}
             timezone={timezone}
             isCompleted={isCompleted}
-            onToggleComplete={toggleComplete}
+            onToggleComplete={handleToggleComplete}
           />
         ) : (
           <div className="contest-table-feed" role="feed" aria-label="Contest schedule list">
@@ -454,7 +502,7 @@ export const App: React.FC = () => {
                     contest={c}
                     timezone={timezone}
                     isCompleted={isCompleted(c.id)}
-                    onToggleComplete={toggleComplete}
+                    onToggleComplete={handleToggleComplete}
                     autoRemoveDays={autoRemoveDays}
                   />
                 </React.Fragment>

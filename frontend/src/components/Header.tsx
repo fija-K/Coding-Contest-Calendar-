@@ -1,5 +1,5 @@
 import React from 'react';
-import { Moon, Sun, ChevronDown, Eye } from 'lucide-react';
+import { Moon, Sun, ChevronDown, Eye, Volume2, VolumeX } from 'lucide-react';
 import { TimezoneOption } from '../utils/date';
 
 interface HeaderProps {
@@ -9,6 +9,8 @@ interface HeaderProps {
   onTimezoneChange: (tz: string) => void;
   timezones: TimezoneOption[];
   totalVisits?: number;
+  isSoundMuted?: boolean;
+  onToggleSound?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -18,6 +20,8 @@ export const Header: React.FC<HeaderProps> = ({
   onTimezoneChange,
   timezones,
   totalVisits,
+  isSoundMuted = false,
+  onToggleSound,
 }) => {
   const visitCountFormatted = totalVisits !== undefined ? totalVisits.toLocaleString() : '...';
 
@@ -68,6 +72,23 @@ export const Header: React.FC<HeaderProps> = ({
             </select>
             <ChevronDown size={12} className="tz-icon" />
           </div>
+
+          {onToggleSound && (
+            <button
+              type="button"
+              className={`header-icon-btn sound-toggle-btn ${isSoundMuted ? 'muted' : ''}`}
+              onClick={onToggleSound}
+              aria-label={isSoundMuted ? 'Unmute celebration sound' : 'Mute celebration sound'}
+              title={
+                isSoundMuted
+                  ? 'Celebration sound muted (click to unmute)'
+                  : 'Celebration sound enabled (click to mute)'
+              }
+              data-testid="sound-toggle-btn"
+            >
+              {isSoundMuted ? <VolumeX size={13} /> : <Volume2 size={13} />}
+            </button>
+          )}
 
           <button
             type="button"

@@ -1,5 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { formatDateTime, formatDuration, calculateCountdown, getContestLiveStatus } from '../utils/date';
+import {
+  formatDateTime,
+  formatDuration,
+  calculateCountdown,
+  getContestLiveStatus,
+  isRecentlyFinished,
+  isExpiredOlderThan7Days,
+  getAutoRemoveRemainingDays,
+} from '../utils/date';
 
 describe('Date and Countdown Utilities', () => {
   it('formats datetime correctly in Asia/Kolkata timezone', () => {
@@ -78,5 +86,28 @@ describe('Date and Countdown Utilities', () => {
     // After end -> expired
     const afterEnd = new Date('2026-11-04T17:00:00Z');
     expect(getContestLiveStatus(startIso, endIso, afterEnd)).toBe('expired');
+  });
+
+  it('correctly handles 7-day retention and auto-removal calculations', () => {
+    const fakeNow = new Date('2026-11-06T12:00:00Z');
+
+    // Contest ended 2 days ago (within 7 days)
+    const recentStart = '2026-11-04T10:00:00Z';
+    const recentEnd = '2026-11-04T12:00:00Z';
+    expect(isRecentlyFinished(recentStart, recentEnd, fakeNow)).toBe(true);
+    expect(isExpiredOlderThan7Days(recentStart, recentEnd, fakeNow)).toBe(false);
+    expect(getAutoRemoveRemainingDays(recentStart, recentEnd, fakeNow)).toBe(5);
+
+    // Contest ended 8 days ago (past 7 days -> auto-remove)
+    const oldStart = '2026-10-29T10:00:00Z';
+    const oldEnd = '2026-10-29T12:00:00Z';
+    expect(isRecentlyFinished(oldStart, oldEnd, fakeNow)).toBe(false);
+    expect(isExpiredOlderThan7Days(oldStart, oldEnd, fakeNow)).toBe(true);
+
+    // Future contest (not finished)
+    const futureStart = '2026-11-07T10:00:00Z';
+    const futureEnd = '2026-11-07T12:00:00Z';
+    expect(isRecentlyFinished(futureStart, futureEnd, fakeNow)).toBe(false);
+    expect(isExpiredOlderThan7Days(futureStart, futureEnd, fakeNow)).toBe(false);
   });
 });

@@ -161,8 +161,8 @@ describe('Live and Expired Contests Behavior', () => {
       expect(screen.getByTestId('contest-card-cc_starters_263')).toBeInTheDocument();
     });
 
-    // Section divider for ended contests is present
-    expect(screen.getByRole('separator', { name: /Ended contests awaiting completion/i })).toBeInTheDocument();
+    // Section divider for recently finished contests is present
+    expect(screen.getByRole('separator', { name: /Recently Finished Contests/i })).toBeInTheDocument();
 
     // Initial completed count is 0
     expect(screen.getByTestId('completion-counter')).toHaveTextContent('Completed: 0 of 4 contests');

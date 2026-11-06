@@ -92,4 +92,19 @@ describe('ContestCard Component', () => {
     fireEvent.click(btn);
     expect(onToggle).toHaveBeenCalledWith('codeforces_2000');
   });
+
+  it('renders auto-remove countdown tag when autoRemoveDays is provided', () => {
+    render(
+      <ContestCard
+        contest={mockContest}
+        timezone="Asia/Kolkata"
+        isCompleted={false}
+        autoRemoveDays={6}
+      />
+    );
+
+    const autoRemovePill = screen.getByTestId(`auto-remove-${mockContest.id}`);
+    expect(autoRemovePill).toBeInTheDocument();
+    expect(autoRemovePill).toHaveTextContent('Auto-removes in 6d');
+  });
 });

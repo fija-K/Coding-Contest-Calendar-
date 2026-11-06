@@ -9,6 +9,7 @@ interface ContestCardProps {
   timezone: string;
   isCompleted?: boolean;
   onToggleComplete?: (contestId: string) => void;
+  autoRemoveDays?: number | null;
 }
 
 export const ContestCard: React.FC<ContestCardProps> = ({
@@ -16,6 +17,7 @@ export const ContestCard: React.FC<ContestCardProps> = ({
   timezone,
   isCompleted = false,
   onToggleComplete,
+  autoRemoveDays,
 }) => {
   const countdown = useCountdown(contest.start_time, contest.end_time);
 
@@ -85,6 +87,15 @@ export const ContestCard: React.FC<ContestCardProps> = ({
             <span className="status-tag upcoming">Upcoming</span>
           ) : (
             <span className="status-tag completed">Ended</span>
+          )}
+          {autoRemoveDays !== undefined && autoRemoveDays !== null && !isCompleted && (
+            <span
+              className="status-tag auto-remove-pill mono"
+              title="Auto-removes in 7 days if not marked completed"
+              data-testid={`auto-remove-${contest.id}`}
+            >
+              <Clock size={8} /> Auto-removes in {autoRemoveDays}d
+            </span>
           )}
           {isCompleted && (
             <span className="status-tag user-completed" data-testid="completed-badge">

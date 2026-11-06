@@ -9,8 +9,6 @@ interface HeaderProps {
   onTimezoneChange: (tz: string) => void;
   timezones: TimezoneOption[];
   totalVisits?: number;
-  activeThisMonth?: number;
-  onOpenAnalytics?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -20,9 +18,9 @@ export const Header: React.FC<HeaderProps> = ({
   onTimezoneChange,
   timezones,
   totalVisits,
-  activeThisMonth,
-  onOpenAnalytics,
 }) => {
+  const visitCountFormatted = totalVisits !== undefined ? totalVisits.toLocaleString() : '...';
+
   return (
     <header className="app-header">
       <div className="container header-content">
@@ -36,26 +34,23 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Header Controls & Top Traffic Counter */}
         <div className="header-controls">
-          {/* Top Total Visits & Monthly Student Counter */}
-          {onOpenAnalytics && (
-            <button
-              type="button"
-              className="header-visit-counter-btn"
-              onClick={onOpenAnalytics}
-              title="Total website visits • Click for detailed student usage analytics"
-              aria-label="View student visits and traffic analytics"
+          {/* Top Total Visits Pill with Clean Hover Tooltip */}
+          {totalVisits !== undefined && (
+            <div
+              className="header-visit-pill"
+              tabIndex={0}
+              role="status"
+              aria-label={`${visitCountFormatted} total website visits`}
               data-testid="header-visit-counter"
             >
-              <Eye size={12} className="visit-btn-icon" />
+              <Eye size={12} className="visit-btn-icon" aria-hidden="true" />
               <span className="visit-btn-count mono">
-                {totalVisits !== undefined ? `${totalVisits.toLocaleString()} visits` : 'Visits'}
+                {visitCountFormatted} visits
               </span>
-              {activeThisMonth !== undefined && (
-                <span className="visit-btn-monthly mono">
-                  &bull; {activeThisMonth} students/mo
-                </span>
-              )}
-            </button>
+              <div className="visit-hover-tooltip mono" role="tooltip">
+                {visitCountFormatted} total website visits
+              </div>
+            </div>
           )}
 
           <div className="tz-select-wrap" title="Change displayed timezone">

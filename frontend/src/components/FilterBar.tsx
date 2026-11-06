@@ -1,12 +1,12 @@
 import React from 'react';
 import { List, Calendar as CalendarIcon, Search } from 'lucide-react';
-import { PlatformId, ContestStatus } from '../types/contest';
+import { PlatformId, StatusFilter } from '../types/contest';
 
 interface FilterBarProps {
   selectedPlatform: PlatformId | 'all';
   onSelectPlatform: (platform: PlatformId | 'all') => void;
-  selectedStatus: ContestStatus | 'all';
-  onSelectStatus: (status: ContestStatus | 'all') => void;
+  selectedStatus: StatusFilter;
+  onSelectStatus: (status: StatusFilter) => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
   activeView: 'list' | 'calendar';
@@ -17,6 +17,7 @@ interface FilterBarProps {
     codechef: number;
     codeforces: number;
   };
+  recentCount?: number;
   completedCount?: number;
 }
 
@@ -30,6 +31,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   activeView,
   onViewChange,
   counts,
+  recentCount,
   completedCount,
 }) => {
   return (
@@ -88,6 +90,17 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             onClick={() => onSelectStatus('upcoming')}
           >
             Upcoming
+          </button>
+          <button
+            type="button"
+            className={`status-segment-btn ${selectedStatus === 'recent' ? 'active' : ''}`}
+            onClick={() => onSelectStatus('recent')}
+            title="Finished in past 7 days • Auto-removes after 7 days if uncompleted"
+          >
+            <span>Recently Finished</span>
+            {recentCount !== undefined && recentCount > 0 && (
+              <span className="segment-count mono">({recentCount})</span>
+            )}
           </button>
           <button
             type="button"

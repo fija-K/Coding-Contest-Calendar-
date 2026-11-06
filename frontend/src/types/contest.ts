@@ -2,6 +2,8 @@ export type PlatformId = 'codeforces' | 'codechef' | 'leetcode';
 
 export type ContestStatus = 'upcoming' | 'ongoing' | 'completed';
 
+export type StatusFilter = 'all' | 'upcoming' | 'recent' | 'completed';
+
 export interface Contest {
   id: string;
   platform: PlatformId;

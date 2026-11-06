@@ -7,20 +7,25 @@ import { FilterBar } from './components/FilterBar';
 import { ContestCard } from './components/ContestCard';
 import { ContestCalendar } from './components/ContestCalendar';
 import { EmptyState } from './components/EmptyState';
-import { AnalyticsModal } from './components/AnalyticsModal';
 import { useTheme } from './hooks/useTheme';
 import { useTimezone } from './hooks/useTimezone';
 import { useCompletedContests } from './hooks/useCompletedContests';
 import { useAnalytics } from './hooks/useAnalytics';
 import { fetchContests, fetchNextContest, fetchPlatformStatuses, triggerAdminRefresh } from './services/api';
-import { Contest, PlatformId, ContestStatus, PlatformStatus } from './types/contest';
-import { getContestLiveStatus, LiveStatus } from './utils/date';
+import { Contest, PlatformId, StatusFilter, PlatformStatus } from './types/contest';
+import {
+  getContestLiveStatus,
+  LiveStatus,
+  isRecentlyFinished,
+  isExpiredOlderThan7Days,
+  getAutoRemoveRemainingDays,
+} from './utils/date';
 
 export const App: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const { timezone, setTimezone, commonTimezones } = useTimezone();
   const { isCompleted, toggleComplete, clearAllCompleted } = useCompletedContests();
-  const { analytics, isLoading: isAnalyticsLoading, refreshAnalytics, isModalOpen, setIsModalOpen } = useAnalytics();
+  const { analytics } = useAnalytics();
 
   const [contests, setContests] = useState<Contest[]>([]);
   const [nextContest, setNextContest] = useState<Contest | null>(null);
@@ -30,7 +35,7 @@ export const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const [selectedPlatform, setSelectedPlatform] = useState<PlatformId | 'all'>('all');
-  const [selectedStatus, setSelectedStatus] = useState<ContestStatus | 'all'>('upcoming');
+  const [selectedStatus, setSelectedStatus] = useState<StatusFilter>('upcoming');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeView, setActiveView] = useState<'list' | 'calendar'>('list');
 
@@ -157,6 +162,16 @@ export const App: React.FC = () => {
     return null;
   }, [contests, nextContest, isCompleted, currentTime]);
 
+  // Contests finished within the past 7 days that are not marked completed by user
+  const recentCount = useMemo(() => {
+    return contests.filter((c) => {
+      return (
+        isRecentlyFinished(c.start_time, c.end_time, currentTime, c.duration_seconds) &&
+        !isCompleted(c.id)
+      );
+    }).length;
+  }, [contests, isCompleted, currentTime]);
+
   // Platform contest counts for filters based on selected status and completions
   const counts = useMemo(() => {
     let all = 0;
@@ -166,15 +181,21 @@ export const App: React.FC = () => {
 
     contests.forEach((c) => {
       const userDone = isCompleted(c.id);
+      const isRecent = isRecentlyFinished(c.start_time, c.end_time, currentTime, c.duration_seconds);
+      const isOldExpired = isExpiredOlderThan7Days(c.start_time, c.end_time, currentTime, c.duration_seconds);
       let statusMatches = false;
 
       if (selectedStatus === 'all') {
-        statusMatches = true;
+        // In 'all', auto-remove uncompleted contests ended more than 7 days ago
+        statusMatches = userDone || !isOldExpired;
       } else if (selectedStatus === 'completed') {
         statusMatches = userDone;
+      } else if (selectedStatus === 'recent') {
+        // In 'recent', show uncompleted contests finished in past 7 days
+        statusMatches = isRecent && !userDone;
       } else if (selectedStatus === 'upcoming') {
-        // Active view: all contests not marked completed
-        statusMatches = !userDone;
+        // In 'upcoming', active view: live, upcoming, and recent finished (auto-removes if >7 days old)
+        statusMatches = !userDone && !isOldExpired;
       }
 
       if (statusMatches) {
@@ -186,12 +207,13 @@ export const App: React.FC = () => {
     });
 
     return { all, leetcode, codechef, codeforces };
-  }, [contests, selectedStatus, isCompleted]);
+  }, [contests, selectedStatus, isCompleted, currentTime]);
 
   // Filtered and sorted contests:
-  // - Upcoming view: live + future upcoming + expired uncompleted. Completed contests move to Completed tab!
+  // - Upcoming view: live + future upcoming + recently finished (past 7 days). Completed move to Completed tab!
+  // - Recent view: only recently finished contests from past 7 days (awaiting user completion).
   // - Completed view: only contests marked completed by the user.
-  // - All view: all contests, with active first and completed last.
+  // - Auto-removal rule: after 7 days, uncompleted ended contests are automatically removed!
   const filteredContests = useMemo(() => {
     const matched = contests.filter((c) => {
       if (selectedPlatform !== 'all' && c.platform !== selectedPlatform) {
@@ -199,20 +221,29 @@ export const App: React.FC = () => {
       }
 
       const userDone = isCompleted(c.id);
+      const isRecent = isRecentlyFinished(c.start_time, c.end_time, currentTime, c.duration_seconds);
+      const isOldExpired = isExpiredOlderThan7Days(c.start_time, c.end_time, currentTime, c.duration_seconds);
+
       if (selectedStatus === 'upcoming') {
-        // Once marked completed, contest leaves upcoming and moves to Completed tab!
+        // If marked completed, moved to Completed tab!
         if (userDone) {
           return false;
         }
-        // Uncompleted expired contests remain visible here so user can mark them!
+        // If ended more than 7 days ago and user hasn't marked completed, automatically remove!
+        if (isOldExpired) {
+          return false;
+        }
         return true;
+      } else if (selectedStatus === 'recent') {
+        // Only uncompleted contests finished within past 7 days
+        return isRecent && !userDone;
       } else if (selectedStatus === 'completed') {
         // Only contests marked completed by user
         return userDone;
       }
 
-      // 'all' view shows all
-      return true;
+      // 'all' view shows active, recent, and completed (purges uncompleted > 7 days old)
+      return userDone || !isOldExpired;
     }).filter((c) => {
       if (!searchQuery.trim()) return true;
       const query = searchQuery.toLowerCase();
@@ -224,7 +255,7 @@ export const App: React.FC = () => {
     // Priority ordering:
     // 1. LIVE contests (ending soonest first)
     // 2. UPCOMING future contests (starting soonest first)
-    // 3. EXPIRED uncompleted contests (ended most recently first)
+    // 3. RECENTLY FINISHED contests (ended most recently first)
     // 4. COMPLETED contests (ended most recently first)
     return matched.sort((a, b) => {
       const aDone = isCompleted(a.id);
@@ -281,8 +312,6 @@ export const App: React.FC = () => {
         onTimezoneChange={setTimezone}
         timezones={commonTimezones}
         totalVisits={analytics?.total_visits}
-        activeThisMonth={analytics?.active_this_month}
-        onOpenAnalytics={() => setIsModalOpen(true)}
       />
 
       <main className="container main-content-wrap">
@@ -304,7 +333,7 @@ export const App: React.FC = () => {
         </section>
 
         {/* Hero: Live Contest (shows BEFORE UP NEXT) and Next Upcoming Contest */}
-        {selectedStatus !== 'completed' && (
+        {selectedStatus !== 'completed' && selectedStatus !== 'recent' && (
           <HeroNextContest
             liveContest={liveContests[0] || null}
             upNextContest={upNextContest}
@@ -323,6 +352,7 @@ export const App: React.FC = () => {
           activeView={activeView}
           onViewChange={setActiveView}
           counts={counts}
+          recentCount={recentCount}
           completedCount={completedFilterCount}
         />
 
@@ -370,6 +400,8 @@ export const App: React.FC = () => {
             message={
               searchQuery.trim()
                 ? `No contests matching "${searchQuery}".`
+                : selectedStatus === 'recent'
+                ? 'No recently finished contests in the past 7 days. Finished contests auto-remove after 7 days if uncompleted.'
                 : selectedStatus === 'completed'
                 ? 'No completed contests yet. Mark contests as completed to track your achievements.'
                 : `No active contests found for ${selectedPlatform === 'all' ? 'any platform' : selectedPlatform}.`
@@ -385,21 +417,36 @@ export const App: React.FC = () => {
         ) : (
           <div className="contest-table-feed" role="feed" aria-label="Contest schedule list">
             {filteredContests.map((c, index) => {
-              const liveStatus = getContestLiveStatus(c.start_time, c.end_time, currentTime, c.duration_seconds);
-              const isCurrentExpired = liveStatus === 'expired' && !isCompleted(c.id);
+              const isRecent =
+                isRecentlyFinished(c.start_time, c.end_time, currentTime, c.duration_seconds) &&
+                !isCompleted(c.id);
+              const autoRemoveDays = isRecent
+                ? getAutoRemoveRemainingDays(c.start_time, c.end_time, currentTime, c.duration_seconds)
+                : null;
+
               const prevContest = index > 0 ? filteredContests[index - 1] : null;
-              const isPrevNonExpired =
+              const isPrevNonRecent =
                 prevContest &&
-                getContestLiveStatus(prevContest.start_time, prevContest.end_time, currentTime, prevContest.duration_seconds) !== 'expired' &&
-                !isCompleted(prevContest.id);
-              const showDivider = isCurrentExpired && isPrevNonExpired;
+                (!isRecentlyFinished(prevContest.start_time, prevContest.end_time, currentTime, prevContest.duration_seconds) ||
+                  isCompleted(prevContest.id));
+              const showRecentHeader = isRecent && (index === 0 || isPrevNonRecent) && selectedStatus !== 'recent';
 
               return (
                 <React.Fragment key={c.id}>
-                  {showDivider && (
-                    <div className="feed-section-divider" role="separator" aria-label="Ended contests awaiting completion">
-                      <span className="feed-section-divider-text">
-                        Ended Contests &bull; Action Required (Mark completed to move to Completed tab)
+                  {showRecentHeader && (
+                    <div
+                      className="feed-recent-section-header"
+                      role="separator"
+                      aria-label="Recently Finished Contests"
+                      data-testid="recently-finished-section"
+                    >
+                      <div className="recent-section-title-wrap">
+                        <span className="recent-section-icon" aria-hidden="true">🏁</span>
+                        <span className="recent-section-title">Recently Finished Contests</span>
+                        <span className="recent-section-badge mono">Past 7 Days</span>
+                      </div>
+                      <span className="recent-section-sub">
+                        Auto-removes in 7 days if uncompleted &bull; Mark completed to move to Completed tab
                       </span>
                     </div>
                   )}
@@ -408,6 +455,7 @@ export const App: React.FC = () => {
                     timezone={timezone}
                     isCompleted={isCompleted(c.id)}
                     onToggleComplete={toggleComplete}
+                    autoRemoveDays={autoRemoveDays}
                   />
                 </React.Fragment>
               );
@@ -421,30 +469,8 @@ export const App: React.FC = () => {
           <p>
             ContestCal &bull; Developer Competitive Programming Calendar &bull; Automated Real-time Schedule Ingestion
           </p>
-          <div className="footer-analytics-strip">
-            <button
-              type="button"
-              className="footer-analytics-trigger"
-              onClick={() => setIsModalOpen(true)}
-              title="Click to view student traffic & monthly active metrics"
-            >
-              <span>Student Analytics:</span>
-              <strong className="mono">{analytics?.total_visits ? analytics.total_visits.toLocaleString() : '...'} total visits</strong>
-              <span className="footer-analytics-divider">&bull;</span>
-              <strong className="mono">{analytics?.active_this_month ?? '...'} active this month</strong>
-            </button>
-          </div>
         </div>
       </footer>
-
-      {/* Student Usage & Website Visits Analytics Modal */}
-      <AnalyticsModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        analytics={analytics}
-        isLoading={isAnalyticsLoading}
-        onRefresh={refreshAnalytics}
-      />
     </div>
   );
 };

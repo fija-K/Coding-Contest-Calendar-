@@ -118,6 +118,72 @@ export function getContestLiveStatus(
   }
 }
 
+export const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+
+export function isRecentlyFinished(
+  startTimeIso: string,
+  endTimeIso?: string | null,
+  now: Date = new Date(),
+  durationSeconds?: number
+): boolean {
+  const current = now.getTime();
+  const start = new Date(startTimeIso).getTime();
+  let end: number;
+  if (endTimeIso) {
+    end = new Date(endTimeIso).getTime();
+  } else if (durationSeconds !== undefined) {
+    end = start + durationSeconds * 1000;
+  } else {
+    end = start;
+  }
+
+  // Contest has ended, but ended within the last 7 days
+  return current > end && end >= (current - SEVEN_DAYS_MS);
+}
+
+export function isExpiredOlderThan7Days(
+  startTimeIso: string,
+  endTimeIso?: string | null,
+  now: Date = new Date(),
+  durationSeconds?: number
+): boolean {
+  const current = now.getTime();
+  const start = new Date(startTimeIso).getTime();
+  let end: number;
+  if (endTimeIso) {
+    end = new Date(endTimeIso).getTime();
+  } else if (durationSeconds !== undefined) {
+    end = start + durationSeconds * 1000;
+  } else {
+    end = start;
+  }
+
+  // Contest ended more than 7 days ago
+  return current > end && end < (current - SEVEN_DAYS_MS);
+}
+
+export function getAutoRemoveRemainingDays(
+  startTimeIso: string,
+  endTimeIso?: string | null,
+  now: Date = new Date(),
+  durationSeconds?: number
+): number {
+  const current = now.getTime();
+  const start = new Date(startTimeIso).getTime();
+  let end: number;
+  if (endTimeIso) {
+    end = new Date(endTimeIso).getTime();
+  } else if (durationSeconds !== undefined) {
+    end = start + durationSeconds * 1000;
+  } else {
+    end = start;
+  }
+
+  const expiresAt = end + SEVEN_DAYS_MS;
+  const remainingMs = Math.max(0, expiresAt - current);
+  return Math.max(1, Math.ceil(remainingMs / (24 * 60 * 60 * 1000)));
+}
+
 export function calculateCountdown(
   startTimeIso: string,
   endTimeIso: string,

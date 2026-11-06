@@ -20,6 +20,7 @@ describe('FilterBar Component', () => {
         activeView="list"
         onViewChange={onViewChange}
         counts={{ all: 10, leetcode: 4, codechef: 3, codeforces: 3 }}
+        recentCount={2}
         completedCount={4}
       />
     );
@@ -31,6 +32,10 @@ describe('FilterBar Component', () => {
     const codeforcesBtn = screen.getByRole('button', { name: /Codeforces/i });
     fireEvent.click(codeforcesBtn);
     expect(onSelectPlatform).toHaveBeenCalledWith('codeforces');
+
+    const recentBtn = screen.getByRole('button', { name: /Recently Finished/i });
+    fireEvent.click(recentBtn);
+    expect(onSelectStatus).toHaveBeenCalledWith('recent');
 
     const completedBtn = screen.getByRole('button', { name: /Completed/i });
     fireEvent.click(completedBtn);

@@ -184,4 +184,23 @@ describe('Total Visits Counter (Hover-only) & Recently Finished 7-Day Auto-Remov
       expect(screen.getByTestId('completed-badge')).toHaveTextContent(/Completed/i);
     });
   });
+
+  it('enforces monotonic visits count and never allows the counter to decrease', async () => {
+    localStorage.setItem('ccc_max_observed_visits', '250');
+    // Mock server returning a lower number (e.g. 130 from a colder serverless worker)
+    vi.mocked(api.recordStudentVisit).mockResolvedValue({
+      ...mockAnalytics,
+      total_visits: 130,
+    });
+
+    render(<App />);
+
+    // Display must preserve the high-water mark of 250 and not drop to 130!
+    await waitFor(() => {
+      const visitPill = screen.getByTestId('header-visit-counter');
+      expect(visitPill).toBeInTheDocument();
+      expect(visitPill).toHaveTextContent('250 visits');
+      expect(visitPill).toHaveTextContent('250 total website visits');
+    });
+  });
 });

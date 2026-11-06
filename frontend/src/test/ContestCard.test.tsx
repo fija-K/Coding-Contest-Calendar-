@@ -23,7 +23,7 @@ describe('ContestCard Component', () => {
 
     expect(screen.getByText('Codeforces Round 1000 (Div. 2)')).toBeInTheDocument();
     expect(screen.getByText('codeforces')).toBeInTheDocument();
-    expect(screen.getByText(/2h/)).toBeInTheDocument();
+    expect(screen.getByText('2h')).toBeInTheDocument();
 
     const link = screen.getByRole('link', { name: /Open Codeforces Round 1000/i });
     expect(link).toHaveAttribute('href', 'https://codeforces.com/contest/2000');
@@ -50,7 +50,7 @@ describe('ContestCard Component', () => {
 
     expect(screen.getByText('Starters 250 (Rated)')).toBeInTheDocument();
     expect(screen.getByText('codechef')).toBeInTheDocument();
-    expect(screen.getByText(/2h/)).toBeInTheDocument();
+    expect(screen.getByText('2h')).toBeInTheDocument();
 
     const link = screen.getByRole('link', { name: /Open Starters 250/i });
     expect(link).toHaveAttribute('href', 'https://www.codechef.com/START250');

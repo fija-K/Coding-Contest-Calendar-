@@ -261,8 +261,14 @@ def record_student_visit(
     Tracks total site opens and unique monthly active students.
     """
     visitor_id = payload.visitor_id if payload else None
+    client_last_visits = payload.client_last_visits if payload else None
     user_agent = request.headers.get("user-agent")
-    return analytics_service.record_visit(db, visitor_id=visitor_id, user_agent=user_agent)
+    return analytics_service.record_visit(
+        db,
+        visitor_id=visitor_id,
+        user_agent=user_agent,
+        client_last_visits=client_last_visits,
+    )
 
 
 @router.get("/analytics/stats", response_model=AnalyticsResponse, tags=["Analytics"])

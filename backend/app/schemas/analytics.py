@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 class VisitRecordRequest(BaseModel):
     visitor_id: Optional[str] = Field(None, description="Client-side anonymous student/visitor ID")
     path: Optional[str] = Field(None, description="Visited path or view")
+    client_last_visits: Optional[int] = Field(None, description="High-water mark visit count observed by client for multi-container synchronization")
 
 
 class MonthStat(BaseModel):

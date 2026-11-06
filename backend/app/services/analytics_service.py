@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class AnalyticsService:
     VISITS_COUNTER_KEY = "site_visits"
     # Starting baseline visits for a fresh deployment so it starts from established usage
-    BASELINE_VISITS = 128
+    BASELINE_VISITS = 142
 
     def _ensure_global_counter(self, db: Session) -> GlobalCounter:
         counter = db.query(GlobalCounter).filter(GlobalCounter.key == self.VISITS_COUNTER_KEY).first()
@@ -29,11 +29,13 @@ class AnalyticsService:
         self,
         db: Session,
         visitor_id: Optional[str] = None,
-        user_agent: Optional[str] = None
+        user_agent: Optional[str] = None,
+        client_last_visits: Optional[int] = None,
     ) -> AnalyticsResponse:
         """
         Record a student visit.
         - Increments global total visits.
+        - Synchronizes with client high-water mark across multi-container serverless instances.
         - Tracks unique student by persistent visitor_id.
         - Aggregates daily and monthly stats.
         """
@@ -45,8 +47,14 @@ class AnalyticsService:
         if not clean_id or len(clean_id) < 4:
             clean_id = f"stu_{uuid.uuid4().hex[:12]}"
 
-        # 1. Update Global Total Visits Counter
+        # 1. Update Global Total Visits Counter with High-Water Mark Synchronization
         counter = self._ensure_global_counter(db)
+
+        # If another serverless container observed a higher count, sync this worker forward!
+        if client_last_visits and isinstance(client_last_visits, int):
+            if client_last_visits > counter.value:
+                counter.value = client_last_visits
+
         counter.value += 1
         counter.updated_at = now
 

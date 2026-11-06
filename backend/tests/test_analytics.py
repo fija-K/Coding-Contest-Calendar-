@@ -36,3 +36,13 @@ def test_analytics_record_and_get_stats():
     assert stats["total_visits"] >= initial_total + 2
     assert stats["active_this_month"] >= 2
     assert len(stats["monthly_history"]) >= 1
+
+    # 5. High-water mark synchronization:
+    # If client reports observing 500 visits from another container,
+    # the serverless container must sync forward and not decrement!
+    res_sync = client.post(
+        "/api/v1/analytics/visit",
+        json={"visitor_id": "test_sync_student", "client_last_visits": 500}
+    )
+    assert res_sync.status_code == 200
+    assert res_sync.json()["total_visits"] == 501

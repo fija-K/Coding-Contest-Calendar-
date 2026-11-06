@@ -7,9 +7,11 @@ import { FilterBar } from './components/FilterBar';
 import { ContestCard } from './components/ContestCard';
 import { ContestCalendar } from './components/ContestCalendar';
 import { EmptyState } from './components/EmptyState';
+import { AnalyticsModal } from './components/AnalyticsModal';
 import { useTheme } from './hooks/useTheme';
 import { useTimezone } from './hooks/useTimezone';
 import { useCompletedContests } from './hooks/useCompletedContests';
+import { useAnalytics } from './hooks/useAnalytics';
 import { fetchContests, fetchNextContest, fetchPlatformStatuses, triggerAdminRefresh } from './services/api';
 import { Contest, PlatformId, ContestStatus, PlatformStatus } from './types/contest';
 import { getContestLiveStatus, LiveStatus } from './utils/date';
@@ -18,6 +20,7 @@ export const App: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const { timezone, setTimezone, commonTimezones } = useTimezone();
   const { isCompleted, toggleComplete, clearAllCompleted } = useCompletedContests();
+  const { analytics, isLoading: isAnalyticsLoading, refreshAnalytics, isModalOpen, setIsModalOpen } = useAnalytics();
 
   const [contests, setContests] = useState<Contest[]>([]);
   const [nextContest, setNextContest] = useState<Contest | null>(null);
@@ -277,6 +280,9 @@ export const App: React.FC = () => {
         timezone={timezone}
         onTimezoneChange={setTimezone}
         timezones={commonTimezones}
+        totalVisits={analytics?.total_visits}
+        activeThisMonth={analytics?.active_this_month}
+        onOpenAnalytics={() => setIsModalOpen(true)}
       />
 
       <main className="container main-content-wrap">
@@ -415,8 +421,30 @@ export const App: React.FC = () => {
           <p>
             ContestCal &bull; Developer Competitive Programming Calendar &bull; Automated Real-time Schedule Ingestion
           </p>
+          <div className="footer-analytics-strip">
+            <button
+              type="button"
+              className="footer-analytics-trigger"
+              onClick={() => setIsModalOpen(true)}
+              title="Click to view student traffic & monthly active metrics"
+            >
+              <span>Student Analytics:</span>
+              <strong className="mono">{analytics?.total_visits ? analytics.total_visits.toLocaleString() : '...'} total visits</strong>
+              <span className="footer-analytics-divider">&bull;</span>
+              <strong className="mono">{analytics?.active_this_month ?? '...'} active this month</strong>
+            </button>
+          </div>
         </div>
       </footer>
+
+      {/* Student Usage & Website Visits Analytics Modal */}
+      <AnalyticsModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        analytics={analytics}
+        isLoading={isAnalyticsLoading}
+        onRefresh={refreshAnalytics}
+      />
     </div>
   );
 };

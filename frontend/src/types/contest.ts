@@ -44,3 +44,22 @@ export interface ContestFilterParams {
   offset?: number;
   sort?: 'start_time_asc' | 'start_time_desc' | 'name_asc' | 'name_desc';
 }
+
+export interface MonthStat {
+  month: string;
+  month_name: string;
+  unique_students: number;
+  total_visits: number;
+}
+
+export interface AnalyticsData {
+  total_visits: number;
+  active_this_month: number;
+  active_past_30_days: number;
+  active_past_7_days: number;
+  today_visits: number;
+  today_unique_students: number;
+  current_month_name: string;
+  monthly_history: MonthStat[];
+  visitor_id: string;
+}

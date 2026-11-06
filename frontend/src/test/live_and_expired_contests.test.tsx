@@ -9,6 +9,28 @@ vi.mock('../services/api', () => ({
   fetchNextContest: vi.fn(),
   fetchPlatformStatuses: vi.fn(),
   triggerAdminRefresh: vi.fn(),
+  recordStudentVisit: vi.fn().mockResolvedValue({
+    total_visits: 142,
+    active_this_month: 28,
+    active_past_30_days: 28,
+    active_past_7_days: 14,
+    today_visits: 5,
+    today_unique_students: 4,
+    current_month_name: 'November 2026',
+    monthly_history: [],
+    visitor_id: 'test_stu_1',
+  }),
+  fetchAnalyticsStats: vi.fn().mockResolvedValue({
+    total_visits: 142,
+    active_this_month: 28,
+    active_past_30_days: 28,
+    active_past_7_days: 14,
+    today_visits: 5,
+    today_unique_students: 4,
+    current_month_name: 'November 2026',
+    monthly_history: [],
+    visitor_id: 'test_stu_1',
+  }),
 }));
 
 describe('Live and Expired Contests Behavior', () => {

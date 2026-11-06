@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime, timezone
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, Header, status as http_status
+from fastapi import APIRouter, Depends, HTTPException, Query, Header, Request, status as http_status
 from sqlalchemy.orm import Session
 from sqlalchemy import asc, desc
 
@@ -14,7 +14,9 @@ from app.schemas.contest import (
     PlatformStatusResponse,
     HealthResponse,
 )
+from app.schemas.analytics import VisitRecordRequest, AnalyticsResponse
 from app.services.sync_service import sync_service
+from app.services.analytics_service import analytics_service
 from app.services.scheduler import scheduler
 from app.core.config import settings
 from app.db.init_db import seed_database_if_empty
@@ -246,3 +248,30 @@ async def trigger_admin_refresh(
     # Execute sync
     result = await sync_service.sync_all(target_platform=platform)
     return result
+
+
+@router.post("/analytics/visit", response_model=AnalyticsResponse, tags=["Analytics"])
+def record_student_visit(
+    request: Request,
+    payload: Optional[VisitRecordRequest] = None,
+    db: Session = Depends(get_db),
+):
+    """
+    Record a visit from a student or user.
+    Tracks total site opens and unique monthly active students.
+    """
+    visitor_id = payload.visitor_id if payload else None
+    user_agent = request.headers.get("user-agent")
+    return analytics_service.record_visit(db, visitor_id=visitor_id, user_agent=user_agent)
+
+
+@router.get("/analytics/stats", response_model=AnalyticsResponse, tags=["Analytics"])
+def get_analytics_stats(
+    db: Session = Depends(get_db),
+):
+    """
+    Return student usage metrics, monthly active students (MAU),
+    and total times the calendar has been opened.
+    """
+    return analytics_service.get_stats(db)
+

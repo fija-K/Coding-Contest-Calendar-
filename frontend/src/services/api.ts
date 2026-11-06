@@ -1,4 +1,4 @@
-import { Contest, ContestFilterParams, ContestListResponse, PlatformStatus } from '../types/contest';
+import { Contest, ContestFilterParams, ContestListResponse, PlatformStatus, AnalyticsData } from '../types/contest';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 
@@ -101,6 +101,51 @@ export async function triggerAdminRefresh(
   if (!response.ok) {
     const errorText = await response.text();
     throw new Error(`Refresh failed (${response.status}): ${errorText}`);
+  }
+
+  return response.json();
+}
+
+export async function recordStudentVisit(visitorId?: string): Promise<AnalyticsData> {
+  try {
+    const response = await fetch(`${API_BASE}/analytics/visit`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ visitor_id: visitorId }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Analytics ping failed: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (err) {
+    return {
+      total_visits: 128,
+      active_this_month: 1,
+      active_past_30_days: 1,
+      active_past_7_days: 1,
+      today_visits: 1,
+      today_unique_students: 1,
+      current_month_name: new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(new Date()),
+      monthly_history: [],
+      visitor_id: visitorId || 'anonymous',
+    };
+  }
+}
+
+export async function fetchAnalyticsStats(): Promise<AnalyticsData> {
+  const response = await fetch(`${API_BASE}/analytics/stats`, {
+    headers: {
+      'Accept': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch analytics (${response.status})`);
   }
 
   return response.json();

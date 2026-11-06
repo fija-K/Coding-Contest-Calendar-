@@ -1,5 +1,5 @@
 import React from 'react';
-import { Moon, Sun, ChevronDown } from 'lucide-react';
+import { Moon, Sun, ChevronDown, Eye } from 'lucide-react';
 import { TimezoneOption } from '../utils/date';
 
 interface HeaderProps {
@@ -8,6 +8,9 @@ interface HeaderProps {
   timezone: string;
   onTimezoneChange: (tz: string) => void;
   timezones: TimezoneOption[];
+  totalVisits?: number;
+  activeThisMonth?: number;
+  onOpenAnalytics?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -16,6 +19,9 @@ export const Header: React.FC<HeaderProps> = ({
   timezone,
   onTimezoneChange,
   timezones,
+  totalVisits,
+  activeThisMonth,
+  onOpenAnalytics,
 }) => {
   return (
     <header className="app-header">
@@ -28,8 +34,30 @@ export const Header: React.FC<HeaderProps> = ({
           <span className="brand-wordmark">ContestCal</span>
         </div>
 
-        {/* Timezone and Theme controls */}
+        {/* Header Controls & Top Traffic Counter */}
         <div className="header-controls">
+          {/* Top Total Visits & Monthly Student Counter */}
+          {onOpenAnalytics && (
+            <button
+              type="button"
+              className="header-visit-counter-btn"
+              onClick={onOpenAnalytics}
+              title="Total website visits • Click for detailed student usage analytics"
+              aria-label="View student visits and traffic analytics"
+              data-testid="header-visit-counter"
+            >
+              <Eye size={12} className="visit-btn-icon" />
+              <span className="visit-btn-count mono">
+                {totalVisits !== undefined ? `${totalVisits.toLocaleString()} visits` : 'Visits'}
+              </span>
+              {activeThisMonth !== undefined && (
+                <span className="visit-btn-monthly mono">
+                  &bull; {activeThisMonth} students/mo
+                </span>
+              )}
+            </button>
+          )}
+
           <div className="tz-select-wrap" title="Change displayed timezone">
             <select
               className="tz-select mono"

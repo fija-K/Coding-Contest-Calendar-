@@ -151,3 +151,16 @@ def test_admin_refresh_concurrency_lock(client, monkeypatch):
     assert resp.status_code == 409
     assert "already in progress" in resp.json()["detail"]
     monkeypatch.setattr(sync_service, "_is_syncing", False)
+
+
+def test_cron_nightly_sync_endpoint(client):
+    sync_service._is_syncing = False
+    with patch("app.services.sync_service.sync_service.sync_all", new_callable=AsyncMock) as mock_sync:
+        mock_sync.return_value = {"success": True, "message": "Cron Synced", "results": {}}
+        resp = client.get("/api/v1/cron/sync")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["success"] is True
+        assert data["cron"] is True
+        assert "total_contests" in data
+        assert "platform_statuses" in data

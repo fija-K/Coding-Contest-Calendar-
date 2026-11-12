@@ -1,3 +1,4 @@
+import os
 import logging
 import asyncio
 from contextlib import asynccontextmanager
@@ -26,18 +27,21 @@ async def lifespan(app: FastAPI):
     logger.info("Initializing database tables and verifying seed data...")
     seed_database_if_empty()
 
-    # Start background scheduler
-    logger.info("Starting background scheduler...")
-    start_scheduler()
+    is_serverless = bool(os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
+    if not is_serverless:
+        # Start background scheduler for continuous server processes (local / container / VM)
+        logger.info("Starting background scheduler...")
+        start_scheduler()
 
-    # Launch initial sync in background
-    asyncio.create_task(sync_service.sync_all())
+        # Launch initial sync in background
+        asyncio.create_task(sync_service.sync_all())
 
     yield
 
     # Shutdown
-    logger.info("Shutting down background scheduler...")
-    shutdown_scheduler()
+    if not is_serverless:
+        logger.info("Shutting down background scheduler...")
+        shutdown_scheduler()
 
 
 app = FastAPI(

@@ -1,10 +1,4 @@
-from fastapi.testclient import TestClient
-from app.main import app
-
-client = TestClient(app)
-
-
-def test_analytics_record_and_get_stats():
+def test_analytics_record_and_get_stats(client):
     # 1. Record visit for a new student
     stu1_id = "test_student_alpha"
     res1 = client.post("/api/v1/analytics/visit", json={"visitor_id": stu1_id})

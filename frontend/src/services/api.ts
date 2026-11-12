@@ -3,6 +3,16 @@ import { getStoredMaxVisits, saveStoredMaxVisits, BASELINE_DEFAULT_VISITS } from
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 
+export interface AdminRefreshResponse {
+  success: boolean;
+  message?: string;
+  results?: Record<string, any>;
+  contests?: Contest[];
+  total?: number;
+  next_contest?: Contest | null;
+  platform_statuses?: PlatformStatus[];
+}
+
 export async function fetchContests(params: ContestFilterParams = {}): Promise<ContestListResponse> {
   const query = new URLSearchParams();
 
@@ -27,11 +37,16 @@ export async function fetchContests(params: ContestFilterParams = {}): Promise<C
   if (params.sort) {
     query.set('sort', params.sort);
   }
+  // Cache-busting parameter to prevent stale edge/browser response
+  query.set('_t', String(Date.now()));
 
   const url = `${API_BASE}/contests?${query.toString()}`;
   const response = await fetch(url, {
+    cache: 'no-cache',
     headers: {
       'Accept': 'application/json',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
     },
   });
 
@@ -44,9 +59,12 @@ export async function fetchContests(params: ContestFilterParams = {}): Promise<C
 }
 
 export async function fetchNextContest(): Promise<Contest | null> {
-  const response = await fetch(`${API_BASE}/contests/next`, {
+  const response = await fetch(`${API_BASE}/contests/next?_t=${Date.now()}`, {
+    cache: 'no-cache',
     headers: {
       'Accept': 'application/json',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
     },
   });
 
@@ -59,9 +77,12 @@ export async function fetchNextContest(): Promise<Contest | null> {
 }
 
 export async function fetchContestById(id: string): Promise<Contest> {
-  const response = await fetch(`${API_BASE}/contests/${encodeURIComponent(id)}`, {
+  const response = await fetch(`${API_BASE}/contests/${encodeURIComponent(id)}?_t=${Date.now()}`, {
+    cache: 'no-cache',
     headers: {
       'Accept': 'application/json',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
     },
   });
 
@@ -73,9 +94,12 @@ export async function fetchContestById(id: string): Promise<Contest> {
 }
 
 export async function fetchPlatformStatuses(): Promise<PlatformStatus[]> {
-  const response = await fetch(`${API_BASE}/sources/status`, {
+  const response = await fetch(`${API_BASE}/sources/status?_t=${Date.now()}`, {
+    cache: 'no-cache',
     headers: {
       'Accept': 'application/json',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
     },
   });
 
@@ -89,13 +113,21 @@ export async function fetchPlatformStatuses(): Promise<PlatformStatus[]> {
 export async function triggerAdminRefresh(
   platform?: string,
   adminKey: string = 'dev-admin-secret-key-change-in-prod'
-): Promise<any> {
-  const query = platform ? `?platform=${encodeURIComponent(platform)}` : '';
+): Promise<AdminRefreshResponse> {
+  const params = new URLSearchParams();
+  if (platform) {
+    params.set('platform', platform);
+  }
+  params.set('_t', String(Date.now()));
+  const query = `?${params.toString()}`;
+
   const response = await fetch(`${API_BASE}/admin/refresh${query}`, {
     method: 'POST',
+    cache: 'no-cache',
     headers: {
       'Accept': 'application/json',
       'X-Admin-Key': adminKey,
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
     },
   });
 

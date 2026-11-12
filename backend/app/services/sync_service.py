@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 class SyncService:
     _lock = asyncio.Lock()
     _is_syncing = False
+    _sync_started_at: Optional[datetime] = None
 
     def __init__(self, collectors: Optional[List[BaseCollector]] = None):
         self.collectors: List[BaseCollector] = collectors or [
@@ -27,6 +28,12 @@ class SyncService:
 
     @property
     def is_syncing(self) -> bool:
+        if self._is_syncing and self._sync_started_at:
+            elapsed = (datetime.now(timezone.utc) - self._sync_started_at).total_seconds()
+            if elapsed > 30:
+                logger.warning(f"Resetting stale sync flag after {elapsed:.1f}s")
+                self._is_syncing = False
+                self._sync_started_at = None
         return self._is_syncing
 
     async def sync_all(self, target_platform: Optional[str] = None) -> Dict[str, Any]:
@@ -45,6 +52,7 @@ class SyncService:
 
         async with self._lock:
             self._is_syncing = True
+            self._sync_started_at = datetime.now(timezone.utc)
             logger.info("Starting concurrent contest synchronization...")
             results = {}
 
@@ -87,6 +95,7 @@ class SyncService:
 
             finally:
                 self._is_syncing = False
+                self._sync_started_at = None
 
     async def _persist_collector_result(self, result: CollectorResult):
         """Persist normalized contests and update platform health."""

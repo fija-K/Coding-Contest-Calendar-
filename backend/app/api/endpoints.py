@@ -55,7 +55,7 @@ def get_health(db: Session = Depends(get_db)):
 
 
 @router.get("/contests", response_model=ContestListResponse, tags=["Contests"])
-def get_contests(
+async def get_contests(
     platform: Optional[str] = Query(None, description="Filter by platform: codeforces, codechef, leetcode"),
     status: Optional[str] = Query(None, description="Filter by status: upcoming, ongoing, completed"),
     from_time: Optional[datetime] = Query(None, alias="from", description="Contest start time greater than or equal to (ISO 8601 UTC)"),
@@ -91,6 +91,14 @@ def get_contests(
     # Auto-seed if database is completely empty (e.g. serverless cold boot)
     if db.query(Contest).count() == 0:
         seed_database_if_empty()
+
+    # If this serverless instance has never successfully synced upstream, perform live sync
+    has_synced = db.query(PlatformHealth).filter(PlatformHealth.last_successful_refresh != None).count() > 0
+    if not has_synced and not sync_service.is_syncing:
+        try:
+            await sync_service.sync_all()
+        except Exception as e:
+            logger.warning(f"Initial worker sync failed, falling back to database contests: {e}")
 
     # First update status in-place for active contests
     sync_service.update_contest_statuses()
@@ -222,10 +230,12 @@ def get_sources_status(db: Session = Depends(get_db)):
 async def trigger_admin_refresh(
     platform: Optional[str] = Query(None, description="Optional single platform to refresh"),
     x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key", description="Admin API Key"),
+    db: Session = Depends(get_db),
 ):
     """
     Trigger manual upstream synchronization for all or specific platforms.
     Protected with X-Admin-Key header.
+    Returns the refreshed contests directly so callers do not need to issue follow-up requests.
     """
     if not x_admin_key or x_admin_key != settings.ADMIN_API_KEY:
         raise HTTPException(
@@ -247,7 +257,45 @@ async def trigger_admin_refresh(
 
     # Execute sync
     result = await sync_service.sync_all(target_platform=platform)
-    return result
+
+    # Retrieve all updated contests and statuses directly from this worker's database
+    all_contests = db.query(Contest).order_by(asc(Contest.start_time)).all()
+    statuses = db.query(PlatformHealth).all()
+    now_utc = datetime.now(timezone.utc)
+    next_contest = db.query(Contest).filter(
+        Contest.start_time > now_utc,
+        Contest.status == "upcoming"
+    ).order_by(asc(Contest.start_time)).first()
+
+    return {
+        **result,
+        "contests": [ContestResponse.model_validate(c) for c in all_contests],
+        "total": len(all_contests),
+        "next_contest": ContestResponse.model_validate(next_contest) if next_contest else None,
+        "platform_statuses": [PlatformStatusResponse.model_validate(s) for s in statuses],
+    }
+
+
+@router.get("/cron/sync", tags=["Admin"])
+async def cron_nightly_sync(
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    """
+    Automated nightly / periodic cron synchronization endpoint.
+    Triggered by Vercel Cron or GitHub Actions.
+    """
+    result = await sync_service.sync_all()
+    all_contests = db.query(Contest).order_by(asc(Contest.start_time)).all()
+    statuses = db.query(PlatformHealth).all()
+    return {
+        "success": True,
+        "cron": True,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "total_contests": len(all_contests),
+        "results": result.get("results", {}),
+        "platform_statuses": [PlatformStatusResponse.model_validate(s) for s in statuses],
+    }
 
 
 @router.post("/analytics/visit", response_model=AnalyticsResponse, tags=["Analytics"])

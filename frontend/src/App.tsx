@@ -139,8 +139,19 @@ export const App: React.FC = () => {
   const handleManualRefresh = async () => {
     try {
       setIsRefreshing(true);
-      await triggerAdminRefresh();
-      await loadData();
+      const refreshResult = await triggerAdminRefresh();
+      if (refreshResult && Array.isArray(refreshResult.contests) && refreshResult.contests.length > 0) {
+        setContests(refreshResult.contests);
+        if (refreshResult.next_contest !== undefined) {
+          setNextContest(refreshResult.next_contest);
+        }
+        if (Array.isArray(refreshResult.platform_statuses) && refreshResult.platform_statuses.length > 0) {
+          setPlatformStatuses(refreshResult.platform_statuses);
+        }
+        setError(null);
+      } else {
+        await loadData();
+      }
     } catch (err: any) {
       console.error('Manual refresh failed:', err);
       await loadData();

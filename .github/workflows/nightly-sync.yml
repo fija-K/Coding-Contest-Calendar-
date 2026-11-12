@@ -1,0 +1,20 @@
+name: Automated Contest Sync
+
+on:
+  schedule:
+    # 18:30 UTC is 00:00 IST (Midnight sync every single night)
+    - cron: '30 18 * * *'
+    # 06:30 UTC is 12:00 IST (Noon sync for fresh daily contests)
+    - cron: '30 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    name: Sync Live Contests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Automated Sync on Vercel
+        run: |
+          echo "Triggering live contest synchronization..."
+          response=$(curl -f -s -S --max-time 30 "https://coding-contest-calendar.vercel.app/api/v1/cron/sync")
+          echo "Response: $response"

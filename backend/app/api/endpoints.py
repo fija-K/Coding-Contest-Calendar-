@@ -260,7 +260,7 @@ async def trigger_admin_refresh(
 
     # Retrieve all updated contests and statuses directly from this worker's database
     all_contests = db.query(Contest).order_by(asc(Contest.start_time)).all()
-    statuses = db.query(PlatformHealth).all()
+    statuses = get_sources_status(db)
     now_utc = datetime.now(timezone.utc)
     next_contest = db.query(Contest).filter(
         Contest.start_time > now_utc,
@@ -272,7 +272,7 @@ async def trigger_admin_refresh(
         "contests": [ContestResponse.model_validate(c) for c in all_contests],
         "total": len(all_contests),
         "next_contest": ContestResponse.model_validate(next_contest) if next_contest else None,
-        "platform_statuses": [PlatformStatusResponse.model_validate(s) for s in statuses],
+        "platform_statuses": statuses,
     }
 
 
@@ -287,14 +287,14 @@ async def cron_nightly_sync(
     """
     result = await sync_service.sync_all()
     all_contests = db.query(Contest).order_by(asc(Contest.start_time)).all()
-    statuses = db.query(PlatformHealth).all()
+    statuses = get_sources_status(db)
     return {
         "success": True,
         "cron": True,
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "total_contests": len(all_contests),
         "results": result.get("results", {}),
-        "platform_statuses": [PlatformStatusResponse.model_validate(s) for s in statuses],
+        "platform_statuses": statuses,
     }
 
 

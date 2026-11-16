@@ -27,6 +27,9 @@ import {
   markContestCelebrated,
   clearCelebratedContests,
 } from './utils/celebration';
+import { NotificationToast } from './components/NotificationToast';
+import { NotificationModal } from './components/NotificationModal';
+import { useContestNotifications } from './hooks/useContestNotifications';
 
 export const App: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
@@ -45,6 +48,9 @@ export const App: React.FC = () => {
   const [selectedStatus, setSelectedStatus] = useState<StatusFilter>('upcoming');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeView, setActiveView] = useState<'list' | 'calendar'>('list');
+
+  // Notification modal visibility state
+  const [isNotifModalOpen, setIsNotifModalOpen] = useState<boolean>(false);
 
   // Celebration sound mute preference state
   const [isSoundMuted, setIsSoundMuted] = useState<boolean>(() => isCelebrationSoundMuted());
@@ -108,6 +114,24 @@ export const App: React.FC = () => {
       window.removeEventListener('focus', handleVisibility);
     };
   }, []);
+
+  // 5-minute pre-contest push notification & reminder system
+  const {
+    permission: notifPermission,
+    enabled: notifEnabled,
+    soundEnabled: notifSoundEnabled,
+    activeToast,
+    toggleNotifications: handleToggleNotifications,
+    toggleSound: handleToggleNotifSound,
+    toggleContestReminder: handleToggleContestReminder,
+    isContestReminderActive,
+    sendTestNotification: handleSendTestNotification,
+    dismissToast: handleDismissToast,
+  } = useContestNotifications({
+    contests,
+    currentTime,
+    isCompleted,
+  });
 
   // Load contest and status data
   const loadData = useCallback(async () => {
@@ -362,6 +386,21 @@ export const App: React.FC = () => {
 
   return (
     <div className="app-root">
+      {/* 5-minute pre-contest alert toast */}
+      <NotificationToast toast={activeToast} onDismiss={handleDismissToast} />
+
+      {/* 5-minute pre-contest notification settings modal */}
+      <NotificationModal
+        isOpen={isNotifModalOpen}
+        onClose={() => setIsNotifModalOpen(false)}
+        enabled={notifEnabled}
+        permission={notifPermission}
+        soundEnabled={notifSoundEnabled}
+        onToggleEnabled={handleToggleNotifications}
+        onToggleSound={handleToggleNotifSound}
+        onSendTest={handleSendTestNotification}
+      />
+
       <Header
         theme={theme}
         onToggleTheme={toggleTheme}
@@ -371,6 +410,8 @@ export const App: React.FC = () => {
         totalVisits={analytics?.total_visits}
         isSoundMuted={isSoundMuted}
         onToggleSound={handleToggleSound}
+        onOpenNotifications={() => setIsNotifModalOpen(true)}
+        notificationsEnabled={notifEnabled}
       />
 
       <main className="container main-content-wrap">
@@ -397,6 +438,7 @@ export const App: React.FC = () => {
             liveContest={liveContests[0] || null}
             upNextContest={upNextContest}
             timezone={timezone}
+            isReminderActive={isContestReminderActive}
           />
         )}
 
@@ -515,6 +557,8 @@ export const App: React.FC = () => {
                     isCompleted={isCompleted(c.id)}
                     onToggleComplete={handleToggleComplete}
                     autoRemoveDays={autoRemoveDays}
+                    isReminderActive={isContestReminderActive(c.id)}
+                    onToggleReminder={handleToggleContestReminder}
                   />
                 </React.Fragment>
               );

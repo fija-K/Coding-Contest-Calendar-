@@ -107,3 +107,57 @@ export function playClappingSound(volume = 0.22): void {
     console.debug('Applause audio playback skipped:', err);
   }
 }
+
+/**
+ * Plays a pleasant, harmonic crystal reminder chime (two gentle rising tones: D5 -> A5)
+ * when a contest is starting in 5 minutes.
+ */
+export function playReminderChime(volume = 0.22): void {
+  if (typeof window === 'undefined') return;
+  if (isCelebrationSoundMuted()) return;
+
+  try {
+    const AudioContextClass =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+
+    if (!AudioContextClass) return;
+
+    const ctx = new AudioContextClass();
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+
+    const now = ctx.currentTime;
+    const tones = [
+      { freq: 587.33, start: 0, duration: 0.38 },    // D5
+      { freq: 880.00, start: 0.15, duration: 0.70 },   // A5
+    ];
+
+    tones.forEach(({ freq, start, duration }) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + start);
+
+      gain.gain.setValueAtTime(0.0001, now + start);
+      gain.gain.exponentialRampToValueAtTime(volume, now + start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + start + duration);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + start);
+      osc.stop(now + start + duration);
+    });
+
+    setTimeout(() => {
+      try {
+        ctx.close().catch(() => {});
+      } catch {}
+    }, 1200);
+  } catch (err) {
+    console.debug('Reminder chime audio skipped:', err);
+  }
+}

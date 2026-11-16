@@ -35,14 +35,16 @@ vi.mock('../services/api', () => ({
 }));
 
 describe('App End-to-End Completion Integration', () => {
+  const now = new Date();
+
   const mockContests: Contest[] = [
     {
       id: 'cf_101',
       platform: 'codeforces',
       external_id: '101',
       name: 'Codeforces Round 101',
-      start_time: '2026-11-10T14:00:00Z',
-      end_time: '2026-11-10T16:00:00Z',
+      start_time: new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString(),
+      end_time: new Date(now.getTime() + 4 * 60 * 60 * 1000).toISOString(),
       duration_seconds: 7200,
       contest_url: 'https://codeforces.com/contest/101',
       status: 'upcoming',
@@ -54,8 +56,8 @@ describe('App End-to-End Completion Integration', () => {
       platform: 'leetcode',
       external_id: '202',
       name: 'LeetCode Weekly Contest 202',
-      start_time: '2026-11-12T14:00:00Z',
-      end_time: '2026-11-12T15:30:00Z',
+      start_time: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString(),
+      end_time: new Date(now.getTime() + (24 * 60 + 90) * 60 * 1000).toISOString(),
       duration_seconds: 5400,
       contest_url: 'https://leetcode.com/contest/202',
       status: 'upcoming',

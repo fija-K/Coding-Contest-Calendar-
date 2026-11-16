@@ -1,5 +1,5 @@
 import React from 'react';
-import { Moon, Sun, ChevronDown, Eye, Volume2, VolumeX } from 'lucide-react';
+import { Moon, Sun, ChevronDown, Eye, Volume2, VolumeX, Bell } from 'lucide-react';
 import { TimezoneOption } from '../utils/date';
 
 interface HeaderProps {
@@ -11,6 +11,8 @@ interface HeaderProps {
   totalVisits?: number;
   isSoundMuted?: boolean;
   onToggleSound?: () => void;
+  onOpenNotifications?: () => void;
+  notificationsEnabled?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -22,6 +24,8 @@ export const Header: React.FC<HeaderProps> = ({
   totalVisits,
   isSoundMuted = false,
   onToggleSound,
+  onOpenNotifications,
+  notificationsEnabled = false,
 }) => {
   const visitCountFormatted = totalVisits !== undefined ? totalVisits.toLocaleString() : '...';
 
@@ -72,6 +76,28 @@ export const Header: React.FC<HeaderProps> = ({
             </select>
             <ChevronDown size={12} className="tz-icon" />
           </div>
+
+          {onOpenNotifications && (
+            <button
+              type="button"
+              className={`header-icon-btn notif-bell-btn ${notificationsEnabled ? 'active' : ''}`}
+              onClick={onOpenNotifications}
+              aria-label={
+                notificationsEnabled
+                  ? 'Contest reminders active (5 min before start)'
+                  : 'Enable 5-minute contest reminders'
+              }
+              title={
+                notificationsEnabled
+                  ? 'Contest reminders active (5 min before start)'
+                  : 'Enable 5-minute contest reminders'
+              }
+              data-testid="header-notif-btn"
+            >
+              <Bell size={13} />
+              {notificationsEnabled && <span className="notif-active-dot" aria-hidden="true" />}
+            </button>
+          )}
 
           {onToggleSound && (
             <button

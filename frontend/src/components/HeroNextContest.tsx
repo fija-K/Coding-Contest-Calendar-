@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock, Calendar as CalendarIcon, ArrowUpRight, Radio } from 'lucide-react';
+import { Clock, Calendar as CalendarIcon, ArrowUpRight, Radio, Bell } from 'lucide-react';
 import { Contest } from '../types/contest';
 import { formatDateTime, formatDuration, getContestLiveStatus } from '../utils/date';
 import { useCountdown } from '../hooks/useCountdown';
@@ -9,15 +9,17 @@ export interface HeroNextContestProps {
   liveContest?: Contest | null;
   upNextContest?: Contest | null;
   timezone: string;
+  isReminderActive?: (contestId: string) => boolean;
 }
 
 interface HeroCardItemProps {
   contest: Contest;
   mode: 'live' | 'upnext';
   timezone: string;
+  isReminderActive?: boolean;
 }
 
-const HeroCardItem: React.FC<HeroCardItemProps> = ({ contest, mode, timezone }) => {
+const HeroCardItem: React.FC<HeroCardItemProps> = ({ contest, mode, timezone, isReminderActive = false }) => {
   const endTime = contest.end_time || new Date(new Date(contest.start_time).getTime() + contest.duration_seconds * 1000).toISOString();
   const countdown = useCountdown(contest.start_time, endTime);
 
@@ -73,6 +75,15 @@ const HeroCardItem: React.FC<HeroCardItemProps> = ({ contest, mode, timezone }) 
                 </span>
               </>
             )}
+            {!isLive && isReminderActive && (
+              <>
+                <span className="meta-divider" aria-hidden="true">•</span>
+                <span className="hero-meta-item hero-reminder-badge-inline" title="5-minute start reminder active">
+                  <Bell size={11} className="meta-icon reminder-bell-icon" />
+                  <span className="mono">5m Alert Set</span>
+                </span>
+              </>
+            )}
           </div>
         </div>
 
@@ -106,6 +117,7 @@ export const HeroNextContest: React.FC<HeroNextContestProps> = ({
   liveContest,
   upNextContest,
   timezone,
+  isReminderActive,
 }) => {
   // Resolve which contest(s) to render
   let effectiveLive = liveContest || null;
@@ -144,6 +156,7 @@ export const HeroNextContest: React.FC<HeroNextContestProps> = ({
           contest={effectiveUpNext}
           mode="upnext"
           timezone={timezone}
+          isReminderActive={isReminderActive ? isReminderActive(effectiveUpNext.id) : false}
         />
       )}
     </div>

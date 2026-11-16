@@ -1,5 +1,5 @@
 import React from 'react';
-import { ExternalLink, Clock, Calendar as CalendarIcon, Radio, CheckCircle2, Circle } from 'lucide-react';
+import { ExternalLink, Clock, Calendar as CalendarIcon, Radio, CheckCircle2, Circle, Bell } from 'lucide-react';
 import { Contest } from '../types/contest';
 import { formatDateTime, formatDuration } from '../utils/date';
 import { useCountdown } from '../hooks/useCountdown';
@@ -10,6 +10,8 @@ interface ContestCardProps {
   isCompleted?: boolean;
   onToggleComplete?: (contestId: string) => void;
   autoRemoveDays?: number | null;
+  isReminderActive?: boolean;
+  onToggleReminder?: (contestId: string) => void;
 }
 
 export const ContestCard: React.FC<ContestCardProps> = ({
@@ -18,6 +20,8 @@ export const ContestCard: React.FC<ContestCardProps> = ({
   isCompleted = false,
   onToggleComplete,
   autoRemoveDays,
+  isReminderActive = false,
+  onToggleReminder,
 }) => {
   const countdown = useCountdown(contest.start_time, contest.end_time);
 
@@ -87,6 +91,21 @@ export const ContestCard: React.FC<ContestCardProps> = ({
             <span className="status-tag upcoming">Upcoming</span>
           ) : (
             <span className="status-tag completed">Ended</span>
+          )}
+          {countdown.isUpcoming && !isCompleted && isReminderActive && (
+            <span
+              className="status-tag reminder-active-pill mono"
+              title="5-minute start reminder active"
+              data-testid={`reminder-pill-${contest.id}`}
+              onClick={(e) => {
+                if (onToggleReminder) {
+                  e.stopPropagation();
+                  onToggleReminder(contest.id);
+                }
+              }}
+            >
+              <Bell size={8} /> 5m Alert
+            </span>
           )}
           {autoRemoveDays !== undefined && autoRemoveDays !== null && !isCompleted && (
             <span

@@ -55,10 +55,10 @@ def seed_database_if_empty():
         for p in data.get("platforms", []):
             health = PlatformHealth(
                 platform=p["platform"],
-                health=p.get("health", "healthy"),
+                health="healthy",
                 contest_count=p.get("contest_count", 0),
-                last_successful_refresh=now_utc,
-                last_attempted_refresh=now_utc,
+                last_successful_refresh=None,
+                last_attempted_refresh=None,
                 latest_error=None
             )
             db.add(health)

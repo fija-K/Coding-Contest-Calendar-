@@ -92,13 +92,33 @@ async def get_contests(
     if db.query(Contest).count() == 0:
         seed_database_if_empty()
 
-    # If this serverless instance has never successfully synced upstream, perform live sync
-    has_synced = db.query(PlatformHealth).filter(PlatformHealth.last_successful_refresh != None).count() > 0
-    if not has_synced and not sync_service.is_syncing:
+    # Determine if live upstream synchronization is required:
+    # 1. Has this instance never successfully synced upstream?
+    # 2. Or is the last successful refresh older than 30 minutes (stale)?
+    now_utc = datetime.now(timezone.utc)
+    latest_refresh = (
+        db.query(PlatformHealth.last_successful_refresh)
+        .filter(PlatformHealth.last_successful_refresh != None)
+        .order_by(desc(PlatformHealth.last_successful_refresh))
+        .first()
+    )
+
+    should_sync = False
+    if not latest_refresh or not latest_refresh[0]:
+        should_sync = True
+    else:
+        last_dt = latest_refresh[0]
+        if last_dt.tzinfo is None:
+            last_dt = last_dt.replace(tzinfo=timezone.utc)
+        # Auto-sync if data is older than 30 minutes (1800s)
+        if (now_utc - last_dt).total_seconds() > 1800:
+            should_sync = True
+
+    if should_sync and not sync_service.is_syncing:
         try:
             await sync_service.sync_all()
         except Exception as e:
-            logger.warning(f"Initial worker sync failed, falling back to database contests: {e}")
+            logger.warning(f"Auto-sync on contest load failed, falling back to cached contests: {e}")
 
     # First update status in-place for active contests
     sync_service.update_contest_statuses()

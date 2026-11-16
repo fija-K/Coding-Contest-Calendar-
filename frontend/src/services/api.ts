@@ -112,31 +112,43 @@ export async function fetchPlatformStatuses(): Promise<PlatformStatus[]> {
 
 export async function triggerAdminRefresh(
   platform?: string,
-  adminKey: string = 'dev-admin-secret-key-change-in-prod'
+  adminKey: string = 'dev-admin-secret-key-change-in-prod',
+  maxRetries: number = 3
 ): Promise<AdminRefreshResponse> {
   const params = new URLSearchParams();
   if (platform) {
     params.set('platform', platform);
   }
-  params.set('_t', String(Date.now()));
-  const query = `?${params.toString()}`;
 
-  const response = await fetch(`${API_BASE}/admin/refresh${query}`, {
-    method: 'POST',
-    cache: 'no-cache',
-    headers: {
-      'Accept': 'application/json',
-      'X-Admin-Key': adminKey,
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-    },
-  });
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    params.set('_t', String(Date.now()));
+    const query = `?${params.toString()}`;
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Refresh failed (${response.status}): ${errorText}`);
+    const response = await fetch(`${API_BASE}/admin/refresh${query}`, {
+      method: 'POST',
+      cache: 'no-cache',
+      headers: {
+        'Accept': 'application/json',
+        'X-Admin-Key': adminKey,
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+      },
+    });
+
+    if (response.status === 409 && attempt < maxRetries) {
+      // Sync is already in progress, wait 1.5s for it to finish and retry
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      continue;
+    }
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Refresh failed (${response.status}): ${errorText}`);
+    }
+
+    return response.json();
   }
 
-  return response.json();
+  throw new Error('Refresh timed out while waiting for existing sync operation.');
 }
 
 export { getStoredMaxVisits, saveStoredMaxVisits, BASELINE_DEFAULT_VISITS } from '../utils/analyticsStorage';

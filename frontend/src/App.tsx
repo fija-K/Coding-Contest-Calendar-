@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { CheckCircle2 } from 'lucide-react';
 import { Header } from './components/Header';
 import { FreshnessBanner } from './components/FreshnessBanner';
@@ -133,6 +133,8 @@ export const App: React.FC = () => {
     isCompleted,
   });
 
+  const lastFetchTimeRef = useRef<number>(0);
+
   // Load contest and status data
   const loadData = useCallback(async () => {
     try {
@@ -146,6 +148,7 @@ export const App: React.FC = () => {
       setContests(contestsRes.items || []);
       setNextContest(nextRes);
       setPlatformStatuses(statusesRes || []);
+      lastFetchTimeRef.current = Date.now();
     } catch (err: any) {
       console.error('Error fetching calendar data:', err);
       setError(err?.message || 'Failed to load contest schedule from backend.');
@@ -157,6 +160,35 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     loadData();
+  }, [loadData]);
+
+  // Automated background sync: check freshness periodically and on tab focus
+  useEffect(() => {
+    const checkFreshnessAndRefresh = () => {
+      // If data is older than 20 minutes, silently refresh
+      const ageMs = Date.now() - lastFetchTimeRef.current;
+      if (lastFetchTimeRef.current > 0 && ageMs > 20 * 60 * 1000) {
+        loadData();
+      }
+    };
+
+    // Check every 5 minutes in background
+    const bgInterval = setInterval(checkFreshnessAndRefresh, 5 * 60 * 1000);
+
+    const handleFocusOrVisible = () => {
+      if (!document.hidden) {
+        checkFreshnessAndRefresh();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleFocusOrVisible);
+    window.addEventListener('focus', handleFocusOrVisible);
+
+    return () => {
+      clearInterval(bgInterval);
+      document.removeEventListener('visibilitychange', handleFocusOrVisible);
+      window.removeEventListener('focus', handleFocusOrVisible);
+    };
   }, [loadData]);
 
   // Handle manual refresh

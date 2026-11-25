@@ -1,6 +1,6 @@
 import logging
 from typing import List, Optional
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import httpx
 from app.collectors.base import BaseCollector, CollectorResult
 from app.schemas.contest import ContestCreate
@@ -41,24 +41,25 @@ class CodeforcesCollector(BaseCollector):
             raw_contests = data.get("result", [])
             normalized: List[ContestCreate] = []
             now_utc = datetime.now(timezone.utc)
+            fourteen_days_ago = now_utc - timedelta(days=14)
 
             for item in raw_contests:
-                # We prioritize BEFORE and CODING phases, but also capture recent or scheduled contests
-                phase = item.get("phase", "")
-                if phase not in ["BEFORE", "CODING"]:
-                    # Skip historical finished contests to avoid syncing thousands of past contests on every run
-                    continue
-
                 ext_id = str(item.get("id"))
-                name = item.get("name", f"Codeforces Contest {ext_id}").strip()
                 start_sec = item.get("startTimeSeconds")
                 duration_sec = item.get("durationSeconds", 7200)
 
                 if start_sec is None:
-                    logger.warning(f"Skipping Codeforces contest {ext_id} due to missing startTimeSeconds")
                     continue
 
                 start_time = self.parse_datetime(start_sec)
+                phase = item.get("phase", "")
+
+                # Keep BEFORE and CODING phases, plus FINISHED contests within past 14 days
+                if phase not in ["BEFORE", "CODING"]:
+                    if start_time < fourteen_days_ago:
+                        continue
+
+                name = item.get("name", f"Codeforces Contest {ext_id}").strip()
                 status = self.determine_status(start_time, duration_sec, now_utc)
 
                 contest = ContestCreate(

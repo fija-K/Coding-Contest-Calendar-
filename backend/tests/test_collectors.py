@@ -108,6 +108,49 @@ class TestCodeforcesCollector:
             assert result.success is False
             assert "timed out" in result.error_message
 
+    @pytest.mark.asyncio
+    async def test_includes_recently_finished_contests(self):
+        collector = CodeforcesCollector()
+        now_ts = int(datetime.now(timezone.utc).timestamp())
+        mock_response_data = {
+            "status": "OK",
+            "result": [
+                {
+                    "id": 2002,
+                    "name": "Upcoming Round",
+                    "type": "CF",
+                    "phase": "BEFORE",
+                    "durationSeconds": 7200,
+                    "startTimeSeconds": now_ts + 86400,
+                },
+                {
+                    "id": 2000,
+                    "name": "Recent Finished Round",
+                    "type": "CF",
+                    "phase": "FINISHED",
+                    "durationSeconds": 7200,
+                    "startTimeSeconds": now_ts - (3 * 86400),
+                },
+                {
+                    "id": 1900,
+                    "name": "Old Finished Round",
+                    "type": "CF",
+                    "phase": "FINISHED",
+                    "durationSeconds": 7200,
+                    "startTimeSeconds": now_ts - (30 * 86400),
+                }
+            ]
+        }
+        mock_resp = make_mock_response(200, mock_response_data)
+        with patch.object(httpx.AsyncClient, "get", return_value=mock_resp):
+            result = await collector.fetch_and_normalize()
+            assert result.success is True
+            assert len(result.contests) == 2
+            ids = [c.external_id for c in result.contests]
+            assert "2002" in ids
+            assert "2000" in ids
+            assert "1900" not in ids
+
 
 class TestCodeChefCollector:
     @pytest.mark.asyncio
@@ -159,6 +202,38 @@ class TestCodeChefCollector:
             assert result.success is True
             assert len(result.contests) == 1
             assert result.contests[0].duration_seconds == 7200  # Default fallback
+
+    @pytest.mark.asyncio
+    async def test_includes_recently_finished_past_contests(self):
+        collector = CodeChefCollector()
+        now_utc = datetime.now(timezone.utc)
+        recent_date = (now_utc - timedelta(days=2)).isoformat()
+        old_date = (now_utc - timedelta(days=25)).isoformat()
+        mock_data = {
+            "status": "success",
+            "future_contests": [],
+            "present_contests": [],
+            "past_contests": [
+                {
+                    "contest_code": "RECENT_PAST",
+                    "contest_name": "Recent Finished Contest",
+                    "contest_start_date_iso": recent_date,
+                    "contest_duration": "120"
+                },
+                {
+                    "contest_code": "OLD_PAST",
+                    "contest_name": "Old Contest",
+                    "contest_start_date_iso": old_date,
+                    "contest_duration": "120"
+                }
+            ]
+        }
+        mock_resp = make_mock_response(200, mock_data)
+        with patch.object(httpx.AsyncClient, "get", return_value=mock_resp):
+            result = await collector.fetch_and_normalize()
+            assert result.success is True
+            assert len(result.contests) == 1
+            assert result.contests[0].external_id == "RECENT_PAST"
 
 
 class TestLeetCodeCollector:

@@ -122,7 +122,7 @@ class LeetCodeCollector(BaseCollector):
 
             # 2. Process allContests (upcoming and recent past contests)
             now_utc = datetime.now(timezone.utc)
-            one_week_ago = now_utc - timedelta(days=7)
+            fourteen_days_ago = now_utc - timedelta(days=14)
 
             for c in all_contests:
                 if c.get("isVirtual", False) or c.get("is_virtual", False):
@@ -137,8 +137,8 @@ class LeetCodeCollector(BaseCollector):
                     continue
 
                 start_dt = self.parse_datetime(start_val)
-                # Keep if it is upcoming, ongoing, or occurred in the last 7 days
-                if start_dt >= one_week_ago or slug in contests_by_slug:
+                # Keep if it is upcoming, ongoing, or occurred in the last 14 days
+                if start_dt >= fourteen_days_ago or slug in contests_by_slug:
                     if slug in contests_by_slug:
                         # Merge fields with preference for explicit top_two data
                         contests_by_slug[slug] = {**c, **contests_by_slug[slug]}

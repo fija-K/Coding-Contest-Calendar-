@@ -1,6 +1,6 @@
 import logging
 from typing import List, Optional
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import httpx
 from app.collectors.base import BaseCollector, CollectorResult
 from app.schemas.contest import ContestCreate
@@ -41,10 +41,23 @@ class CodeChefCollector(BaseCollector):
 
             future_contests = data.get("future_contests", [])
             present_contests = data.get("present_contests", [])
-            raw_contests = future_contests + present_contests
+            past_contests = data.get("past_contests", [])
+
+            now_utc = datetime.now(timezone.utc)
+            fourteen_days_ago = now_utc - timedelta(days=14)
+
+            # Filter past contests to only those within past 14 days
+            recent_past: List[dict] = []
+            for item in past_contests:
+                date_str = item.get("contest_start_date_iso") or item.get("contest_start_date")
+                if date_str:
+                    st = self.parse_datetime(date_str)
+                    if st >= fourteen_days_ago:
+                        recent_past.append(item)
+
+            raw_contests = future_contests + present_contests + recent_past
 
             normalized: List[ContestCreate] = []
-            now_utc = datetime.now(timezone.utc)
 
             for item in raw_contests:
                 code = item.get("contest_code") or item.get("code")

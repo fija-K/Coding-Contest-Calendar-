@@ -2282,3 +2282,129 @@ a:focus-visible {
   background: var(--primary-hover);
 }
 
+/* ==========================================================================
+   Questions Solved Tracker & Badges
+   ========================================================================== */
+
+.questions-solved-ctrl {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-xs);
+  background-color: var(--surface-elevated);
+  border: 1px solid var(--border);
+  font-size: 0.6875rem;
+  color: var(--muted-foreground);
+  transition: all var(--transition-fast);
+  user-select: none;
+}
+
+.questions-solved-ctrl:hover {
+  border-color: var(--border-hover);
+}
+
+.questions-solved-ctrl.has-solved {
+  background-color: rgba(80, 214, 160, 0.08);
+  border-color: rgba(80, 214, 160, 0.35);
+  color: var(--success);
+}
+
+.questions-label {
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  white-space: nowrap;
+}
+
+.questions-step-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  padding: 0;
+  border-radius: 3px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--foreground);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.questions-step-btn:hover:not(:disabled) {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: #ffffff;
+}
+
+.questions-step-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.questions-input {
+  width: 24px;
+  height: 17px;
+  padding: 0;
+  text-align: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  color: var(--foreground);
+  font-size: 0.75rem;
+  font-weight: 600;
+  outline: none;
+  -moz-appearance: textfield;
+}
+
+.questions-input::-webkit-outer-spin-button,
+.questions-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.questions-input:focus {
+  border-color: var(--primary);
+  background-color: var(--surface);
+}
+
+.questions-solved-ctrl.has-solved .questions-input {
+  color: var(--success);
+  font-weight: 700;
+}
+
+.progress-questions-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  background-color: rgba(168, 85, 247, 0.1);
+  border: 1px solid rgba(168, 85, 247, 0.25);
+  color: #c084fc;
+}
+
+.progress-questions-pill strong {
+  color: #ffffff;
+}
+
+.calendar-chip-solved {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.625rem;
+  font-weight: 600;
+  padding: 0.05rem 0.25rem;
+  border-radius: 3px;
+  background: rgba(80, 214, 160, 0.2);
+  color: var(--success);
+  margin-left: 0.25rem;
+}
+
+

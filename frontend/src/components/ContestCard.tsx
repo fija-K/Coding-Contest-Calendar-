@@ -12,6 +12,8 @@ interface ContestCardProps {
   autoRemoveDays?: number | null;
   isReminderActive?: boolean;
   onToggleReminder?: (contestId: string) => void;
+  questionsSolved?: number;
+  onUpdateQuestions?: (contestId: string, count: number) => void;
 }
 
 export const ContestCard: React.FC<ContestCardProps> = ({
@@ -22,6 +24,8 @@ export const ContestCard: React.FC<ContestCardProps> = ({
   autoRemoveDays,
   isReminderActive = false,
   onToggleReminder,
+  questionsSolved = 0,
+  onUpdateQuestions,
 }) => {
   const countdown = useCountdown(contest.start_time, contest.end_time);
 
@@ -120,6 +124,57 @@ export const ContestCard: React.FC<ContestCardProps> = ({
             <span className="status-tag user-completed" data-testid="completed-badge">
               <CheckCircle2 size={9} /> Completed
             </span>
+          )}
+          {onUpdateQuestions && (
+            <div
+              className={`questions-solved-ctrl ${questionsSolved > 0 ? 'has-solved' : ''}`}
+              title="Number of questions finished in this contest"
+              data-testid={`questions-ctrl-${contest.id}`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <span className="questions-label">🎯 Solved:</span>
+              <button
+                type="button"
+                className="questions-step-btn minus"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onUpdateQuestions(contest.id, Math.max(0, (questionsSolved || 0) - 1));
+                }}
+                disabled={(questionsSolved || 0) <= 0}
+                aria-label={`Decrease questions solved for ${contest.name}`}
+                title="Decrease questions solved"
+                data-testid={`questions-dec-${contest.id}`}
+              >
+                −
+              </button>
+              <input
+                type="number"
+                min="0"
+                max="99"
+                className="questions-input mono"
+                value={questionsSolved || 0}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value, 10);
+                  onUpdateQuestions(contest.id, isNaN(val) ? 0 : Math.max(0, Math.min(99, val)));
+                }}
+                onClick={(e) => e.stopPropagation()}
+                aria-label={`Questions solved for ${contest.name}`}
+                data-testid={`questions-input-${contest.id}`}
+              />
+              <button
+                type="button"
+                className="questions-step-btn plus"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onUpdateQuestions(contest.id, (questionsSolved || 0) + 1);
+                }}
+                aria-label={`Increase questions solved for ${contest.name}`}
+                title="Increase questions solved"
+                data-testid={`questions-inc-${contest.id}`}
+              >
+                +
+              </button>
+            </div>
           )}
         </div>
       </div>

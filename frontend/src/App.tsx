@@ -30,11 +30,13 @@ import {
 import { NotificationToast } from './components/NotificationToast';
 import { NotificationModal } from './components/NotificationModal';
 import { useContestNotifications } from './hooks/useContestNotifications';
+import { useContestQuestions } from './hooks/useContestQuestions';
 
 export const App: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const { timezone, setTimezone, commonTimezones } = useTimezone();
   const { isCompleted, toggleComplete, clearAllCompleted } = useCompletedContests();
+  const { getQuestionsSolved, setQuestionsSolved, totalQuestionsSolved, clearAllQuestions } = useContestQuestions();
   const { analytics } = useAnalytics();
 
   const [contests, setContests] = useState<Contest[]>([]);
@@ -89,7 +91,8 @@ export const App: React.FC = () => {
   const handleResetCompletions = useCallback(() => {
     clearAllCompleted();
     clearCelebratedContests();
-  }, [clearAllCompleted]);
+    clearAllQuestions();
+  }, [clearAllCompleted, clearAllQuestions]);
 
   // Real-time ticking clock for dynamic live/upcoming/expired transitions
   const [currentTime, setCurrentTime] = useState<Date>(() => new Date());
@@ -503,6 +506,13 @@ export const App: React.FC = () => {
               />
             </div>
             <span className="progress-percentage mono">{completionPercent}%</span>
+            <span
+              className="progress-questions-pill mono"
+              title="Total questions / problems finished across all contests"
+              data-testid="total-questions-solved"
+            >
+              🎯 <strong>{totalQuestionsSolved}</strong> {totalQuestionsSolved === 1 ? 'question' : 'questions'} solved
+            </span>
           </div>
 
           {completionStats.completed > 0 && (
@@ -546,6 +556,7 @@ export const App: React.FC = () => {
             timezone={timezone}
             isCompleted={isCompleted}
             onToggleComplete={handleToggleComplete}
+            getQuestionsSolved={getQuestionsSolved}
           />
         ) : (
           <div className="contest-table-feed" role="feed" aria-label="Contest schedule list">
@@ -591,6 +602,8 @@ export const App: React.FC = () => {
                     autoRemoveDays={autoRemoveDays}
                     isReminderActive={isContestReminderActive(c.id)}
                     onToggleReminder={handleToggleContestReminder}
+                    questionsSolved={getQuestionsSolved(c.id)}
+                    onUpdateQuestions={setQuestionsSolved}
                   />
                 </React.Fragment>
               );

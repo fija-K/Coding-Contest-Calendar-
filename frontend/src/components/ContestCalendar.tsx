@@ -8,6 +8,7 @@ interface ContestCalendarProps {
   timezone: string;
   isCompleted?: (contestId: string) => boolean;
   onToggleComplete?: (contestId: string) => void;
+  getQuestionsSolved?: (contestId: string) => number;
 }
 
 export const ContestCalendar: React.FC<ContestCalendarProps> = ({
@@ -15,6 +16,7 @@ export const ContestCalendar: React.FC<ContestCalendarProps> = ({
   timezone,
   isCompleted = () => false,
   onToggleComplete,
+  getQuestionsSolved,
 }) => {
   const [currentDate, setCurrentDate] = useState(() => new Date());
 
@@ -106,12 +108,17 @@ export const ContestCalendar: React.FC<ContestCalendarProps> = ({
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`calendar-chip ${c.platform} ${completed ? 'is-completed' : ''}`}
-                  title={`${c.name} (${c.platform})${completed ? ' - Completed' : ''} at ${formatTimeOnly(c.start_time, timezone)}`}
+                  title={`${c.name} (${c.platform})${completed ? ' - Completed' : ''}${getQuestionsSolved && getQuestionsSolved(c.id) > 0 ? ` - ${getQuestionsSolved(c.id)} questions solved` : ''} at ${formatTimeOnly(c.start_time, timezone)}`}
                 >
                   <span className="mono calendar-chip-time">
                     {formatTimeOnly(c.start_time, timezone)}
                   </span>{' '}
                   <span className="calendar-chip-title">{c.name}</span>
+                  {getQuestionsSolved && getQuestionsSolved(c.id) > 0 && (
+                    <span className="calendar-chip-solved mono" title={`${getQuestionsSolved(c.id)} questions solved`}>
+                      🎯{getQuestionsSolved(c.id)}
+                    </span>
+                  )}
                 </a>
               </div>
             );
